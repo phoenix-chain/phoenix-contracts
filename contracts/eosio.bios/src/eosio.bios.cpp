@@ -1,6 +1,31 @@
 #include <eosio.bios/eosio.bios.hpp>
+#include <eosio/privileged.hpp>
+
 
 namespace eosiobios {
+
+void bios::newaccount ( const name&       creator,
+                        const name&       newact,
+                        ignore<authority> owner,
+                        ignore<authority> active ){
+
+   if ( creator != get_self() && creator != "libre"_n) {
+      uint64_t tmp = newact.value >> 4;
+      bool has_dot_or_less_than_12_chars = false;
+
+      for( uint32_t i = 0; i < 12; ++i ) {
+         has_dot_or_less_than_12_chars |= !(tmp & 0x1f);
+         tmp >>= 5;
+      }
+         if (has_dot_or_less_than_12_chars) {
+             name suffix = newact.suffix();
+             bool has_dot = suffix != newact;
+             if (has_dot) {
+                check (creator == suffix, "only suffix may create accounts that use suffix");
+         }
+      }
+   }
+}
 
 void bios::setabi( name account, const std::vector<char>& abi ) {
    abi_hash_table table(get_self(), get_self().value);

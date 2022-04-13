@@ -73,7 +73,7 @@ namespace eosiobios {
     */
    class [[eosio::contract("eosio.bios")]] bios : public eosio::contract {
       public:
-         using contract::contract;
+         using eosio::contract::contract;
          /**
           * New account action, called after a new account is created. This code enforces resource-limits rules
           * for new accounts as well as new account naming conventions.
@@ -87,10 +87,10 @@ namespace eosiobios {
           * an amount equal to the current new account creation fee.
           */
          [[eosio::action]]
-         void newaccount( name             creator,
-                          name             name,
+         void newaccount( const name&       creator,
+                          const name&       name,
                           ignore<authority> owner,
-                          ignore<authority> active){}
+                          ignore<authority> active);
          /**
           * Update authorization action updates pemission for an account.
           *
