@@ -324,28 +324,24 @@ namespace eosiosystem {
                             ignore<authority> owner,
                             ignore<authority> active ) {
 
-      if( creator != get_self() ) {
+      if (creator != get_self() && creator != "libre"_n) {
          uint64_t tmp = newact.value >> 4;
-         bool has_dot = false;
+         bool has_dot_or_less_than_12_chars = false;
 
          for( uint32_t i = 0; i < 12; ++i ) {
-           has_dot |= !(tmp & 0x1f);
+           has_dot_or_less_than_12_chars |= !(tmp & 0x1f);
            tmp >>= 5;
          }
-         if( has_dot ) { // or is less than 12 characters
-            auto suffix = newact.suffix();
-            if( suffix == newact ) {
-               name_bid_table bids(get_self(), get_self().value);
-               auto current = bids.find( newact.value );
-               check( current != bids.end(), "no active bid for name" );
-               check( current->high_bidder == creator, "only highest bidder can claim" );
-               check( current->high_bid < 0, "auction for name is not closed yet" );
-               bids.erase( current );
-            } else {
-               check( creator == suffix, "only suffix may create this account" );
+         if (has_dot_or_less_than_12_chars) {
+            name suffix = newact.suffix();
+            bool has_dot = suffix != newact;
+            if (has_dot) {
+               check (creator == suffix, "only suffix may create accounts that use suffix");
             }
          }
       }
+
+      check (newact.to_string().size() > 3, "Minimum 4 Character Length.");
 
       user_resources_table  userres( get_self(), newact.value );
 
