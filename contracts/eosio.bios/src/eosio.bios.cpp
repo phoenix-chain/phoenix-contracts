@@ -1,6 +1,4 @@
 #include <eosio.bios/eosio.bios.hpp>
-#include <eosio/privileged.hpp>
-
 
 namespace eosiobios {
 
@@ -9,19 +7,20 @@ void bios::newaccount ( const name&       creator,
                         ignore<authority> owner,
                         ignore<authority> active ){
 
-   if ( creator != get_self() && creator != "libre"_n) {
-      uint64_t tmp = newact.value >> 4;
-      bool has_dot_or_less_than_12_chars = false;
+   if ( creator != get_self() && creator != "libre"_n) { // bypass checks if creator is eosio or libre
+      check (creator == "libre"_n, "You are not authorised to create accounts"); // only libre accounts and eosio can create accounts
+         uint64_t tmp = newact.value >> 4;
+         bool has_dot = false;
 
       for( uint32_t i = 0; i < 12; ++i ) {
-         has_dot_or_less_than_12_chars |= !(tmp & 0x1f);
+         has_dot |= !(tmp & 0x1f);
          tmp >>= 5;
       }
-         if (has_dot_or_less_than_12_chars) {
+         if (has_dot) {
              name suffix = newact.suffix();
              bool has_dot = suffix != newact;
              if (has_dot) {
-                check (creator == suffix, "only suffix may create accounts that use suffix");
+                check (creator == suffix, "Only suffix may create accounts that use suffix");
          }
       }
    }
