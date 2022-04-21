@@ -8,7 +8,7 @@ void bios::newaccount ( const name&       creator,
                         ignore<authority> active ){
 
    if ( creator != get_self() && creator != "libre"_n) { // bypass checks if creator is eosio or libre
-      check (creator == "libre"_n, "You are not authorised to create accounts"); // only libre accounts and eosio can create accounts
+         // CHECK TABLE FOR CREATE ACCOUNT PERM
          uint64_t tmp = newact.value >> 4;
          bool has_dot = false;
 
