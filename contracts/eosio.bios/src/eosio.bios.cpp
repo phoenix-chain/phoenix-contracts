@@ -2,30 +2,6 @@
 
 namespace eosiobios {
 
-void bios::newaccount ( const name&       creator,
-                        const name&       newact,
-                        ignore<authority> owner,
-                        ignore<authority> active ){
-
-   if ( creator != get_self() && creator != "libre"_n) { // bypass checks if creator is eosio or libre
-      check (creator == "libre"_n, "You are not authorised to create accounts"); // only libre accounts and eosio can create accounts
-         uint64_t tmp = newact.value >> 4;
-         bool has_dot = false;
-
-      for( uint32_t i = 0; i < 12; ++i ) {
-         has_dot |= !(tmp & 0x1f);
-         tmp >>= 5;
-      }
-         if (has_dot) {
-             name suffix = newact.suffix();
-             bool has_dot = suffix != newact;
-             if (has_dot) {
-                check (creator == suffix, "Only suffix may create accounts that use suffix");
-         }
-      }
-   }
-}
-
 void bios::setabi( name account, const std::vector<char>& abi ) {
    abi_hash_table table(get_self(), get_self().value);
    auto itr = table.find( account.value );

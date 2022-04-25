@@ -90,7 +90,7 @@ namespace eosiobios {
          void newaccount( const name&       creator,
                           const name&       name,
                           ignore<authority> owner,
-                          ignore<authority> active);
+                          ignore<authority> active){}
          /**
           * Update authorization action updates pemission for an account.
           *
