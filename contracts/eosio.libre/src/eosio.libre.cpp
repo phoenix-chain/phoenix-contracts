@@ -106,26 +106,6 @@ namespace eosio {
 
 		perm.erase( existing );
 	}
-
-	void eosiolibre::newaccres(name account){
-		eosiosystem::del_bandwidth_table del_tbl( "eosio"_n, "wlcm.libre"_n.value );
-		auto itr = del_tbl.find( account.value );
-		check (itr == del_tbl.end(), "Account has already received default resources");
-
-		auto act = action(
-			permission_level{ "wlcm.libre"_n, "newacc"_n },
-			"eosio"_n,
-			"delegatebw"_n,
-			std::make_tuple(
-				"wlcm.libre"_n,
-				account,
-				asset(10000, SYSsym), // NET
-				asset(100000, SYSsym), // CPU
-				0
-			)
-		);
-		act.send();
-	}
 }
 
-EOSIO_DISPATCH( eosio::eosiolibre, (setperm)(setperm2)(remove)(reqperm)(newaccres))
+EOSIO_DISPATCH( eosio::eosiolibre, (setperm)(setperm2)(remove)(reqperm))

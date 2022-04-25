@@ -7,13 +7,13 @@
 using namespace eosio;
 using namespace std;
 
-#include <eosio.system/eosio.system.hpp> // LIBRE
+#include <bios.libre/bios.libre.hpp> // LIBRE
 
 #define SYSsym symbol("SYS", 4)  // LIBRE
 
 
-namespace eosiosystem {
-	class system_contract;
+namespace eosiobios {
+	class bios;
 }
 
 namespace eosio {
@@ -72,17 +72,6 @@ namespace eosio {
 			[[eosio::action]]
 			void reqperm(name acc, std::string permission );
 			using reqperm_action = eosio::action_wrapper<"reqperm"_n, &eosiolibre::reqperm>;
-
-			/**
-			* New account minimum resources
-			*
-			* Gives minimum resources to new account
-			* 
-			* @param account
-			*/		
-			[[eosio::action]]
-			void newaccres(name account);
-			using newaccres_action = eosio::action_wrapper<"newaccres"_n, &eosiolibre::newaccres>;
          
 			static std::map<std::string,uint8_t> get_priv( name contract_account, name acc ){
 				std::map<std::string,uint8_t> res;

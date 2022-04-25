@@ -1,6 +1,31 @@
-#include <eosio.bios/eosio.bios.hpp>
+#include <bios.libre/bios.libre.hpp>
 
 namespace eosiobios {
+
+void bios::newaccount ( const name&       creator,
+                        const name&       newact,
+                        ignore<authority> owner,
+                        ignore<authority> active ){
+
+   if ( creator != get_self() && creator != "libre"_n) { // bypass checks if creator is eosio or libre
+      check( checkPermission(creator, "createacc")==1, "Creator account does not have permission for this action" );
+      uint64_t tmp = newact.value >> 4;
+      bool has_dot = false;
+
+      for( uint32_t i = 0; i < 12; ++i ) {
+         has_dot |= !(tmp & 0x1f);
+         tmp >>= 5;
+      }
+      
+      if (has_dot) {
+         name suffix = newact.suffix();
+         bool has_dot = suffix != newact;
+         if (has_dot) {
+            check (creator == suffix, "Only suffix may create accounts that use suffix");
+         }
+      }
+   }
+}
 
 void bios::setabi( name account, const std::vector<char>& abi ) {
    abi_hash_table table(get_self(), get_self().value);
@@ -54,4 +79,19 @@ void bios::reqactivated( const eosio::checksum256& feature_digest ) {
    check( is_feature_activated( feature_digest ), "protocol feature is not activated" );
 }
 
+/* ----------------------------------- */
+/* ------------ LIBRE CODE ------------- */
+uint8_t bios::checkPermission(name acc, std::string permission){
+   const std::map<std::string,uint8_t> accperm = eosio::eosiolibre::get_priv ( libre_account, acc);
+   auto permch = accperm.find(permission);
+   return permch->second;
 }
+/*-------------------------------------*/
+
+}
+
+// REMOVE RAM MARKET
+// call setalimits
+// 1 RAM
+// 1 NET
+// 5k RAM
