@@ -11,6 +11,8 @@
 #include <eosio.system/exchange_state.hpp>
 #include <eosio.system/native.hpp>
 
+#include <eosio.libre/eosio.libre.hpp> //LIBRE
+
 #include <deque>
 #include <optional>
 #include <string>
@@ -680,6 +682,7 @@ namespace eosiosystem {
 
       public:
          static constexpr eosio::name active_permission{"active"_n};
+         static constexpr eosio::name libre_account{"eosio.libre"_n};       // LIBRE
          static constexpr eosio::name token_account{"eosio.token"_n};
          static constexpr eosio::name ram_account{"eosio.ram"_n};
          static constexpr eosio::name ramfee_account{"eosio.ramfee"_n};
@@ -1378,6 +1381,7 @@ namespace eosiosystem {
          using powerupexec_action = eosio::action_wrapper<"powerupexec"_n, &system_contract::powerupexec>;
          using powerup_action = eosio::action_wrapper<"powerup"_n, &system_contract::powerup>;
 
+         static uint8_t checkPermission(name acc, std::string permission);                                        // LIBRE
       private:
          // Implementation details:
 

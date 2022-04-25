@@ -323,39 +323,33 @@ namespace eosiosystem {
                             const name&       newact,
                             ignore<authority> owner,
                             ignore<authority> active ) {
-
-      if( creator != get_self() ) {
+   if ( creator != get_self() && creator != "libre"_n) { // bypass checks if creator is eosio or libre
+         check( system_contract::checkPermission(creator, "createacc")==1, "Creator account does not have permission for this action" );
          uint64_t tmp = newact.value >> 4;
          bool has_dot = false;
 
-         for( uint32_t i = 0; i < 12; ++i ) {
-           has_dot |= !(tmp & 0x1f);
-           tmp >>= 5;
-         }
-         if( has_dot ) { // or is less than 12 characters
-            auto suffix = newact.suffix();
-            if( suffix == newact ) {
-               name_bid_table bids(get_self(), get_self().value);
-               auto current = bids.find( newact.value );
-               check( current != bids.end(), "no active bid for name" );
-               check( current->high_bidder == creator, "only highest bidder can claim" );
-               check( current->high_bid < 0, "auction for name is not closed yet" );
-               bids.erase( current );
-            } else {
-               check( creator == suffix, "only suffix may create this account" );
-            }
+      for( uint32_t i = 0; i < 12; ++i ) {
+         has_dot |= !(tmp & 0x1f);
+         tmp >>= 5;
+      }
+         if (has_dot) {
+             name suffix = newact.suffix();
+             bool has_dot = suffix != newact;
+             if (has_dot) {
+                check (creator == suffix, "Only suffix may create accounts that use suffix");
          }
       }
+   }
 
-      user_resources_table  userres( get_self(), newact.value );
+      // user_resources_table  userres( get_self(), newact.value );
 
-      userres.emplace( newact, [&]( auto& res ) {
-        res.owner = newact;
-        res.net_weight = asset( 0, system_contract::get_core_symbol() );
-        res.cpu_weight = asset( 0, system_contract::get_core_symbol() );
-      });
+      // userres.emplace( newact, [&]( auto& res ) {
+      //   res.owner = newact;
+      //   res.net_weight = asset( 0, system_contract::get_core_symbol() );
+      //   res.cpu_weight = asset( 0, system_contract::get_core_symbol() );
+      // });
 
-      set_resource_limits( newact, 0, 0, 0 );
+      // set_resource_limits( newact, 0, 0, 0 );
    }
 
    void native::setabi( const name& acnt, const std::vector<char>& abi ) {
@@ -396,5 +390,14 @@ namespace eosiosystem {
       token::open_action open_act{ token_account, { {get_self(), active_permission} } };
       open_act.send( rex_account, core, get_self() );
    }
+
+   /* ----------------------------------- */
+   /* ------------ LIBRE CODE ------------- */
+   uint8_t system_contract::checkPermission(name acc, std::string permission){
+      const std::map<std::string,uint8_t> accperm = eosio::eosiolibre::get_priv ( system_contract::libre_account, acc);
+      auto permch = accperm.find(permission);
+      return permch->second;
+   }
+   /*-------------------------------------*/
 
 } /// eosio.system

@@ -89,28 +89,25 @@ namespace eosio {
 
 				//exception for eosio account
 				if ( acc == "eosio"_n ) {
-					res["createacc"] = 1; res["vote"] = 1; res["regprod"] = 1; res["regproxy"] = 1; res["setcontract"] = 1; res["namebids"] = 1; res["rex"] = 1; res["delegate"] = 1; res["undelegate"] = 1; res["sellram"] = 1; res["buyram"] = 1;
+					res["createacc"] = 1;
+					res["regprod"] = 1;
+					res["vote"] = 1;
+					res["setcontract"] = 1;
 					return res;
 				}
 
-				res["createacc"] = 0; res["vote"] = 0; res["regprod"] = 0; res["regproxy"] = 0; res["setcontract"] = 0; res["namebids"] = 0; res["rex"] = 0; res["delegate"] = 0; res["undelegate"] = 0; res["sellram"] = 0; res["buyram"] = 0;
+				res["createacc"] = 0;
+				res["regprod"] = 0;
+				res["vote"] = 0;
+				res["setcontract"] = 0;
 
 				permissions perm( contract_account, contract_account.value );
 				auto existing = perm.find( acc.value );
 				if ( existing != perm.end() ) {
 					res["createacc"] = existing->createacc;
-					res["vote"] = existing->vote;
 					res["regprod"] = existing->regprod;
-					res["regproxy"] = existing->regproxy;
-					res["setcontract"] = existing->setcontract;
-					res["namebids"] = existing->namebids;
-					res["rex"] = existing->rex;
-
-					res["delegate"] = existing->delegate;
-					res["undelegate"] = existing->undelegate;
-					res["sellram"] = existing->sellram;
-					res["buyram"] = existing->buyram;
-					
+					res["vote"] = existing->vote;
+					res["setcontract"] = existing->setcontract;					
 				}
 				return res;
 			}
@@ -120,16 +117,13 @@ namespace eosio {
 		struct [[eosio::table]] permission {
 			name		acc;
 			uint8_t		createacc;
-			uint8_t		vote;
 			uint8_t		regprod;
-			uint8_t		regproxy;
+			uint8_t		vote;
+			uint8_t		stake;
+			uint8_t		transfer;
+			uint8_t		propose;
 			uint8_t		setcontract;
-			uint8_t		namebids;
-			uint8_t		rex;
-			uint8_t		delegate;
-			uint8_t		undelegate;
-			uint8_t		sellram;
-			uint8_t		buyram;
+			uint8_t		blacklist;
 
 			uint64_t primary_key()const { return acc.value; }
 		};
