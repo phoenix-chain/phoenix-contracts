@@ -47,7 +47,6 @@ namespace eosio {
 			});
 		}
 	}
-	
 
 	void eosiolibre::setperm(name acc, const std::map<std::string,uint8_t>& perms ){
 		require_auth( get_self() );
@@ -102,116 +101,6 @@ namespace eosio {
 					if(it->first == "sellram") { p.sellram = it->second; }
 					if(it->first == "buyram") { p.buyram = it->second; }
 				}
-			});
-		}
-	}
-
-	void eosiolibre::userverify(name acc, name verifier, bool  verified ){
-		require_auth(permission_level("admin.libre"_n, "verifiers"_n));
-		require_auth(verifier);
-		check( is_account( acc ), "Account does not exist.");	
-		require_recipient( acc );
-
-		usersinfo usrinf( get_self(), get_self().value );
-		auto existing = usrinf.find( acc.value );
-
-		if ( existing != usrinf.end() ) {
-			check (existing->verified != verified, "This status alredy set");
-			usrinf.modify( existing, get_self(), [&]( auto& p ){
-				p.verified = verified;
-				if ( verified ) {
-					p.verifiedon = eosio::current_time_point().sec_since_epoch();
-					p.verifier = verifier;
-				} else  {
-					p.verifiedon = 0;
-					p.verifier = ""_n;
-				}
-				p.date = eosio::current_time_point().sec_since_epoch();
-			});
-		} else {
-			usrinf.emplace( get_self(), [&]( auto& p ){
-				p.acc = acc;
-				p.name = "";
-				p.avatar = "";
-				p.verified = verified;
-
-				if ( verified ) {
-					p.verifiedon = eosio::current_time_point().sec_since_epoch();
-					p.verifier = verifier;
-				} else  {
-					p.verifiedon = 0;
-					p.verifier = ""_n;
-				}
-				p.date = eosio::current_time_point().sec_since_epoch();
-			});
-		}
-
-	}
-
-	void eosiolibre::updateraccs(name acc, vector<name> raccs){
-
-		require_auth(acc);
-
-		require_recipient( acc );
-		check( is_account( acc ), "Account does not exist.");
-
-		usersinfo usrinf( get_self(), get_self().value );
-		auto existing = usrinf.find( acc.value );
-		
-		for (auto i = 0; i < raccs.size(); i++) {
-			check( is_account( raccs[i] ), "raccs account '" + raccs[i].to_string() + "' does not exist.");
-		}
-
-		if ( existing != usrinf.end() ) {
-			usrinf.modify( existing, get_self(), [&]( auto& p ){
-				p.raccs = raccs;
-				p.date = eosio::current_time_point().sec_since_epoch();
-			});
-		} else {
-			usrinf.emplace( get_self(), [&]( auto& p ){
-				p.acc = acc;
-				p.name = "";
-				p.avatar = "";
-				p.verified = false;	
-				p.verifiedon = 0;
-				p.verifier = ""_n;
-				p.raccs = raccs;
-				p.date = eosio::current_time_point().sec_since_epoch();
-			});
-		}	
-	}
-
-	void eosiolibre::updateaacts(name acc, vector<tuple<name, name>> aacts){
-
-		require_auth(acc);
-
-		require_recipient( acc );
-		check( is_account( acc ), "Account does not exist.");
-
-		usersinfo usrinf( get_self(), get_self().value );
-		auto existing = usrinf.find( acc.value );
-
-		for (auto i = 0; i < aacts.size(); i++) {
-			const auto &[n1, n2] = aacts[i];
-			//print(n1);
-			check( is_account( n1 ), "aacts account '" + n1.to_string() + "' does not exist.");
-		}
-
-		if ( existing != usrinf.end() ) {
-			usrinf.modify( existing, get_self(), [&]( auto& p ){
-				p.aacts = aacts;
-				p.date = eosio::current_time_point().sec_since_epoch();
-			});
-		} else {
-			usrinf.emplace( get_self(), [&]( auto& p ){
-				p.acc = acc;
-				p.name = "";
-				p.avatar = "";
-				p.verified = false;	
-				p.verifiedon = 0;
-				p.verifier = ""_n;
-				p.aacts = aacts;
-				p.date = eosio::current_time_point().sec_since_epoch();
 			});
 		}
 	}
@@ -295,23 +184,7 @@ namespace eosio {
 			)
 		);
 		act.send();
-
-		// Add in userinfo if not present
-		usersinfo usrinf( get_self(), get_self().value );
-		auto existing = usrinf.find( account.value );
-
-		if ( existing == usrinf.end() ) {
-			usrinf.emplace( get_self(), [&]( auto& p ){
-				p.acc = account;
-				p.name = "";
-				p.avatar = "";
-				p.verified = false;	
-				p.verifiedon = 0;
-				p.verifier = ""_n;
-				p.date = eosio::current_time_point().sec_since_epoch();
-			});
-		}
 	}
 }
 
-EOSIO_DISPATCH( eosio::eosiolibre, (setperm)(setperm2)(remove)(reqperm)(setusername)(userverify)(newaccres)(updateraccs)(updateaacts)(updateac)(kickbp)(addkyc)(updatekyc)(removekyc)(addkycprov)(rmvkycprov)(blkycprov))
+EOSIO_DISPATCH( eosio::eosiolibre, (setperm)(setperm2)(remove)(reqperm)(newaccres))

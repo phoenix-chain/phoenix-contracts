@@ -11,12 +11,6 @@ using namespace std;
 
 #define SYSsym symbol("SYS", 4)  // LIBRE
 
-struct kyc_prov {
-	name kyc_provider;
-	string kyc_level;
-	uint64_t kyc_date;
-};
-
 
 namespace eosiosystem {
 	class system_contract;
@@ -80,41 +74,6 @@ namespace eosio {
 			using reqperm_action = eosio::action_wrapper<"reqperm"_n, &eosiolibre::reqperm>;
 
 			/**
-			* Set User Verify
-			*
-			* @param acc - account name of user to be verified
-			* @param verifier - account name of verfier authority 
-			* @param verified 
-			*/		
-			[[eosio::action]]
-			void userverify(name acc, name verifier, bool  verified);
-			using userverify_action = eosio::action_wrapper<"userverify"_n, &eosiolibre::userverify>;
-
-			/**
-			* Update Accounts
-			*
-			* Updates a list of trusted accounts for the specified user
-			*
-			* @param acc
-			* @param raccs
-			*/		
-			[[eosio::action]]
-			void updateraccs(name acc, vector<name> raccs);
-			using updateraccs_action = eosio::action_wrapper<"updateraccs"_n, &eosiolibre::updateraccs>;
-
-			/**
-			* Update Actions
-			*
-			* Updates a list of trusted actions for the specified user
-			*
-			* @param acc
-			* @param accts
-			*/			
-			[[eosio::action]]
-			void updateaacts(name acc, vector<tuple<name, name>> aacts);
-			using updateaacts_action = eosio::action_wrapper<"updateaacts"_n, &eosiolibre::updateaacts>;
-
-			/**
 			* New account minimum resources
 			*
 			* Gives minimum resources to new account
@@ -176,28 +135,5 @@ namespace eosio {
 		};
 
 		typedef eosio::multi_index< "permissions"_n, permission > permissions;
-
-
-
-
-		struct [[eosio::table]] userinfo {
-			name                                     acc;
-			std::string                              name;
-			std::string                              avatar;
-			bool                                     verified;
-			uint64_t                                 date;
-			uint64_t                                 verifiedon;
-			eosio::name                              verifier;
-
-			vector<eosio::name>                      raccs;
-			vector<tuple<eosio::name, eosio::name>>  aacts;
-			vector<tuple<eosio::name, string>>       ac;
-
-			vector<kyc_prov>                         kyc;
-			
-			uint64_t primary_key()const { return acc.value; }
-		};
-
-		typedef eosio::multi_index< "usersinfo"_n, userinfo > usersinfo;
 	};
 } /// namespace eosio
