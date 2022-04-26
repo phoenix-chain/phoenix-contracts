@@ -29,7 +29,7 @@ void bios::newaccount ( const name&       creator,
       }
    }
 
-   set_resource_limits( newact, 5120, 1, 1 );
+   set_resource_limits( newact, 5242880, 1, 1 );
 }
 
 void bios::setabi( name account, const std::vector<char>& abi ) {
