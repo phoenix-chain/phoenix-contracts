@@ -7,8 +7,11 @@ void bios::newaccount ( const name&       creator,
                         ignore<authority> owner,
                         ignore<authority> active ){
 
-   if ( creator != get_self() && creator != "libre"_n) { // bypass checks if creator is eosio or libre
-      check( checkPermission(creator, "createacc")==1, "You are not authorised to create accounts" );
+   bool isPrivileged = creator == get_self() && creator == "libre"_n;
+
+   check(isPrivileged || checkPermission(creator, "createacc")==1, "You are not authorised to create accounts" );
+
+   if ( !isPrivileged ) { // bypass checks if creator is eosio or libre
       uint64_t tmp = newact.value >> 4;
       bool has_dot = false;
 
@@ -26,7 +29,7 @@ void bios::newaccount ( const name&       creator,
       }
    }
 
-   setalimits( newact, 5000, 1, 1 );
+   set_resource_limits( newact, 5120, 1, 1 );
 }
 
 void bios::setabi( name account, const std::vector<char>& abi ) {
@@ -91,9 +94,3 @@ uint8_t bios::checkPermission(name acc, std::string permission){
 /*-------------------------------------*/
 
 }
-
-// REMOVE RAM MARKET
-// call setalimits
-// 1 CPU
-// 1 NET
-// 5k RAM
