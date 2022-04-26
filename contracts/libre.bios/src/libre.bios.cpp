@@ -7,7 +7,7 @@ void bios::newaccount ( const name&       creator,
                         ignore<authority> owner,
                         ignore<authority> active ){
 
-   bool isPrivileged = creator == get_self() && creator == "libre"_n;
+   bool isPrivileged = creator == get_self() || creator == "libre"_n;
 
    check(isPrivileged || checkPermission(creator, "createacc")==1, "You are not authorised to create accounts" );
 
