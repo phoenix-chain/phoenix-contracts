@@ -7,7 +7,7 @@
 using namespace eosio;
 using namespace std;
 
-#include <bios.libre/bios.libre.hpp> // LIBRE
+#include <libre.bios/libre.bios.hpp> // LIBRE
 
 #define SYSsym symbol("SYS", 4)  // LIBRE
 

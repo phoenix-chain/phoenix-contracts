@@ -1,4 +1,4 @@
-#include <bios.libre/bios.libre.hpp>
+#include <libre.bios/libre.bios.hpp>
 
 namespace eosiobios {
 
