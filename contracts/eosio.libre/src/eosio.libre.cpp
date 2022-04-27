@@ -6,7 +6,6 @@ namespace eosio {
 	void eosiolibre::setperm2(name acc, const std::vector<uint8_t>& perms ){
 
 		require_auth( get_self() );
-		
 		require_recipient( acc );
 		check( is_account( acc ), "Account does not exist.");
 		
@@ -14,7 +13,6 @@ namespace eosio {
 		auto existing = perm.find( acc.value );
 
 		if ( existing != perm.end() ) {
-
 			perm.modify( existing, get_self(), [&]( auto& p ){
 				p.createacc 	= perms[0];
 				p.regprod 		= perms[1]; 
