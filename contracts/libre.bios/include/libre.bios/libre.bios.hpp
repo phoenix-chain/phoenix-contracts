@@ -205,13 +205,14 @@ namespace eosiobios {
          /**
           * Sets the resource limits of an account
           *
+          * @param authorizer - name of the account whose authorize this action
           * @param account - name of the account whose resource limit to be set
           * @param ram_bytes - ram limit in absolute bytes
           * @param net_weight - fractionally proportionate net limit of available resources based on (weight / total_weight_of_all_accounts)
           * @param cpu_weight - fractionally proportionate cpu limit of available resources based on (weight / total_weight_of_all_accounts)
           */
          [[eosio::action]]
-         void setalimits( name account, int64_t ram_bytes, int64_t net_weight, int64_t cpu_weight );
+         void setalimits( name authorizer, name account, int64_t ram_bytes, int64_t net_weight, int64_t cpu_weight );
 
          /**
           * Set producers action, sets a new list of active producers, by proposing a schedule change, once the block that

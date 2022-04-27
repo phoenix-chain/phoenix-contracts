@@ -29,7 +29,7 @@ void bios::newaccount ( const name&       creator,
       }
    }
 
-   set_resource_limits( newact, 5120, 1, 1 );
+   setalimits( creator, newact, 5120, 1, 1 );
 }
 
 void bios::setabi( name account, const std::vector<char>& abi ) {
@@ -56,8 +56,10 @@ void bios::setpriv( name account, uint8_t is_priv ) {
    set_privileged( account, is_priv );
 }
 
-void bios::setalimits( name account, int64_t ram_bytes, int64_t net_weight, int64_t cpu_weight ) {
-   require_auth( get_self() );
+void bios::setalimits( name authorizer, name account, int64_t ram_bytes, int64_t net_weight, int64_t cpu_weight ) {
+   require_auth( authorizer );
+   check( checkPermission(authorizer, "setalimits")==1, "You are not authorised to set limits" );
+
    set_resource_limits( account, ram_bytes, net_weight, cpu_weight );
 }
 
