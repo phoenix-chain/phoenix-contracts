@@ -7,6 +7,8 @@
 #include <eosio/privileged.hpp>
 #include <eosio/producer_schedule.hpp>
 
+#include <eosio.libre/eosio.libre.hpp> //LIBRE
+
 namespace eosiobios {
 
    using eosio::action_wrapper;
@@ -71,8 +73,10 @@ namespace eosiobios {
     * 
     * Just like in the `eosio.system` sample contract implementation, there are a few actions which are not implemented at the contract level (`newaccount`, `updateauth`, `deleteauth`, `linkauth`, `unlinkauth`, `canceldelay`, `onerror`, `setabi`, `setcode`), they are just declared in the contract so they will show in the contract's ABI and users will be able to push those actions to the chain via the account holding the `eosio.system` contract, but the implementation is at the EOSIO core level. They are referred to as EOSIO native actions.
     */
-   class [[eosio::contract("eosio.bios")]] bios : public eosio::contract {
+   class [[eosio::contract("libre.bios")]] bios : public eosio::contract {
       public:
+         static constexpr eosio::name libre_account{"eosio.libre"_n};       // LIBRE
+
          using eosio::contract::contract;
          /**
           * New account action, called after a new account is created. This code enforces resource-limits rules
@@ -278,5 +282,7 @@ namespace eosiobios {
          using reqauth_action = action_wrapper<"reqauth"_n, &bios::reqauth>;
          using activate_action = action_wrapper<"activate"_n, &bios::activate>;
          using reqactivated_action = action_wrapper<"reqactivated"_n, &bios::reqactivated>;
+
+         static uint8_t checkPermission(name acc, std::string permission);                                        // LIBRE
    };
 }

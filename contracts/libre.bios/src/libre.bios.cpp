@@ -1,4 +1,4 @@
-#include <eosio.bios/eosio.bios.hpp>
+#include <libre.bios/libre.bios.hpp>
 
 namespace eosiobios {
 
@@ -7,23 +7,29 @@ void bios::newaccount ( const name&       creator,
                         ignore<authority> owner,
                         ignore<authority> active ){
 
-   if ( creator != get_self() && creator != "libre"_n) { // bypass checks if creator is eosio or libre
-         // CHECK TABLE FOR CREATE ACCOUNT PERM
-         uint64_t tmp = newact.value >> 4;
-         bool has_dot = false;
+   bool isPrivileged = creator == get_self() || creator == "libre"_n;
+
+   check(isPrivileged || checkPermission(creator, "createacc")==1, "You are not authorised to create accounts" );
+
+   if ( !isPrivileged ) { // bypass checks if creator is eosio or libre
+      uint64_t tmp = newact.value >> 4;
+      bool has_dot = false;
 
       for( uint32_t i = 0; i < 12; ++i ) {
          has_dot |= !(tmp & 0x1f);
          tmp >>= 5;
       }
+      
+      if (has_dot) {
+         name suffix = newact.suffix();
+         bool has_dot = suffix != newact;
          if (has_dot) {
-             name suffix = newact.suffix();
-             bool has_dot = suffix != newact;
-             if (has_dot) {
-                check (creator == suffix, "Only suffix may create accounts that use suffix");
+            check (creator == suffix, "Only suffix may create accounts that use suffix");
          }
       }
    }
+
+   set_resource_limits( newact, 5120, 1, 1 );
 }
 
 void bios::setabi( name account, const std::vector<char>& abi ) {
@@ -77,5 +83,14 @@ void bios::activate( const eosio::checksum256& feature_digest ) {
 void bios::reqactivated( const eosio::checksum256& feature_digest ) {
    check( is_feature_activated( feature_digest ), "protocol feature is not activated" );
 }
+
+/* ----------------------------------- */
+/* ------------ LIBRE CODE ------------- */
+uint8_t bios::checkPermission(name acc, std::string permission){
+   const std::map<std::string,uint8_t> accperm = eosio::eosiolibre::get_priv ( libre_account, acc);
+   auto permch = accperm.find(permission);
+   return permch->second;
+}
+/*-------------------------------------*/
 
 }
