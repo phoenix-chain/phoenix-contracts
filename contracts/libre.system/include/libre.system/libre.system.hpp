@@ -154,8 +154,6 @@ namespace libresystem {
          static constexpr eosio::name libre_account{"eosio.libre"_n};       // LIBRE
           
          static constexpr eosio::name token_account{"eosio.token"_n};
-         static constexpr eosio::name ram_account{"eosio.ram"_n};
-         // static constexpr eosio::name names_account{"eosio.names"_n};
 
          system_contract( name s, name code, datastream<const char*> ds );
          ~system_contract();
