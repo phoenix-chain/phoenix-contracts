@@ -83,17 +83,13 @@ namespace libresystem {
    // Defines `producer_info` structure to be stored in `producer_info` table, added after version 1.0
    struct [[eosio::table, eosio::contract("libre.system")]] producer_info {
       name                                                     owner;
-      double                                                   total_votes = 0;
       eosio::public_key                                        producer_key; /// a packed public key object
       bool                                                     is_active = true;
       std::string                                              url;
-      uint32_t                                                 unpaid_blocks = 0;
-      time_point                                               last_claim_time;
       uint16_t                                                 location = 0;
       eosio::binary_extension<eosio::block_signing_authority>  producer_authority; // added in version 1.9.0
 
       uint64_t primary_key()const { return owner.value;                             }
-      double   by_votes()const    { return is_active ? -total_votes : total_votes;  }
       bool     active()const      { return is_active;                               }
       void     deactivate()       { producer_key = public_key(); producer_authority.reset(); is_active = false; }
 
@@ -122,12 +118,9 @@ namespace libresystem {
       template<typename DataStream>
       friend DataStream& operator << ( DataStream& ds, const producer_info& t ) {
          ds << t.owner
-            << t.total_votes
             << t.producer_key
             << t.is_active
             << t.url
-            << t.unpaid_blocks
-            << t.last_claim_time
             << t.location;
 
          if( !t.producer_authority.has_value() ) return ds;
@@ -138,20 +131,15 @@ namespace libresystem {
       template<typename DataStream>
       friend DataStream& operator >> ( DataStream& ds, producer_info& t ) {
          return ds >> t.owner
-                   >> t.total_votes
                    >> t.producer_key
                    >> t.is_active
                    >> t.url
-                   >> t.unpaid_blocks
-                   >> t.last_claim_time
                    >> t.location
                    >> t.producer_authority;
       }
    };
 
-   typedef eosio::multi_index< "producers"_n, producer_info,
-                               indexed_by<"prototalvote"_n, const_mem_fun<producer_info, double, &producer_info::by_votes>  >
-                             > producers_table;
+   typedef eosio::multi_index< "producers"_n, producer_info> producers_table;
 
    /**
     * The EOSIO system contract. The EOSIO system contract governs ram market, voters, producers, global state.

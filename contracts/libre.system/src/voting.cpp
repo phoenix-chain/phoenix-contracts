@@ -44,8 +44,6 @@ namespace libresystem {
             info.url                = url;
             info.location           = location;
             info.producer_authority.emplace( producer_authority );
-            if ( info.last_claim_time == time_point() )
-               info.last_claim_time = ct;
          });
 
          // auto prod2 = _producers2.find( producer.value );
@@ -60,12 +58,10 @@ namespace libresystem {
       } else {
          _producers.emplace( producer, [&]( producer_info& info ){
             info.owner              = producer;
-            info.total_votes        = 0;
             info.producer_key       = producer_key;
             info.is_active          = true;
             info.url                = url;
             info.location           = location;
-            info.last_claim_time    = ct;
             info.producer_authority.emplace( producer_authority );
          });
          // _producers2.emplace( producer, [&]( producer_info2& info ){
@@ -79,7 +75,6 @@ namespace libresystem {
    void system_contract::regproducer( const name& producer, const eosio::public_key& producer_key, const std::string& url, uint16_t location ) {
       require_auth( producer );
 
-      // if not disabled after kickbp, allow regproducer
       check (checkPermission(producer, "regprod") == 1, "You are not authorised to register as producer");  // LIBRE Check Permissions
 
       check( url.size() < 512, "url too long" );
