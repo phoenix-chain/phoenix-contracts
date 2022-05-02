@@ -45,16 +45,6 @@ namespace libresystem {
             info.location           = location;
             info.producer_authority.emplace( producer_authority );
          });
-
-         // auto prod2 = _producers2.find( producer.value );
-         // if ( prod2 == _producers2.end() ) {
-         //    _producers2.emplace( producer, [&]( producer_info2& info ){
-         //       info.owner                     = producer;
-         //       info.last_votepay_share_update = ct;
-         //    });
-         //    update_total_votepay_share( ct, 0.0, prod->total_votes );
-         //    // When introducing the producer2 table row for the first time, the producer's votes must also be accounted for in the global total_producer_votepay_share at the same time.
-         // }
       } else {
          _producers.emplace( producer, [&]( producer_info& info ){
             info.owner              = producer;
@@ -64,10 +54,6 @@ namespace libresystem {
             info.location           = location;
             info.producer_authority.emplace( producer_authority );
          });
-         // _producers2.emplace( producer, [&]( producer_info2& info ){
-         //    info.owner                     = producer;
-         //    info.last_votepay_share_update = ct;
-         // });
       }
 
    }
