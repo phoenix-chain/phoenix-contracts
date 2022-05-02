@@ -2,12 +2,10 @@
 
 #include <eosio/action.hpp>
 #include <eosio/contract.hpp>
-#include <eosio/crypto.hpp>
 #include <eosio/fixed_bytes.hpp>
 #include <eosio/ignore.hpp>
 #include <eosio/print.hpp>
 #include <eosio/privileged.hpp>
-#include <eosio/producer_schedule.hpp>
 
 namespace libresystem {
 

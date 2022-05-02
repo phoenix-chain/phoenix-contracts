@@ -80,22 +80,22 @@ namespace libresystem {
 
 
    // LIBRE
-   // void system_contract::kickbp( const name& producer ) {
-   //       require_auth(permission_level("eosio"_n, "committee"_n));
+   void system_contract::kickbp( const name& producer ) {
+         require_auth(permission_level("eosio"_n, "committee"_n));
 
-   //       const auto& prod = _producers.get( producer.value, "producer not found" );
-   //       _producers.modify( prod, get_self(), [&]( producer_info& info ){
-   //          info.deactivate();
-   //       });
+         const auto& prod = _producers.get( producer.value, "producer not found" );
+         _producers.modify( prod, get_self(), [&]( producer_info& info ){
+            info.deactivate();
+         });
 
-   //       auto act = action(
-   //          permission_level{ get_self(), "active"_n },
-   //          "eosio.libre"_n,
-   //          "kickbp"_n,
-   //          producer
+         auto act = action(
+            permission_level{ get_self(), "active"_n },
+            "eosio.libre"_n,
+            "kickbp"_n,
+            producer
 
-   //       );
-   //       act.send();
-   // }
+         );
+         act.send();
+   }
 
 } /// namespace libresystem

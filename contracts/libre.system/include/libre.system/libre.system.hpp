@@ -17,9 +17,6 @@
 #include <string>
 #include <type_traits>
 
-#define XPRsym symbol("LIBRE", 4)  // LIBRE Main token 
-#define SYSsym symbol("SYS", 4)  // LIBRE System token for resource allocation
-
 namespace libresystem {
 
    using eosio::asset;
@@ -234,11 +231,24 @@ namespace libresystem {
          [[eosio::action]]
          void rmvproducer( const name& producer );
 
+
+         // LIBRE
+         /**
+          * Kick producer action, deactivates the block producer with account name `producer` and remove permission for regproducer.
+          *
+          * Deactivate the block producer with account name `producer` and remove permission for regproducer.
+          * @param producer - the block producer account to unregister.
+          */
+         [[eosio::action]]
+         void kickbp( const name& producer );
+
          using init_action = eosio::action_wrapper<"init"_n, &system_contract::init>;
 
          using regproducer_action = eosio::action_wrapper<"regproducer"_n, &system_contract::regproducer>;
          using unregprod_action = eosio::action_wrapper<"unregprod"_n, &system_contract::unregprod>;
          using setparams_action = eosio::action_wrapper<"setparams"_n, &system_contract::setparams>;
+
+         using kickbp_action = eosio::action_wrapper<"kickbp"_n, &system_contract::kickbp>;                       // LIBRE
 
          static uint8_t checkPermission(name acc, std::string permission);                                        // LIBRE
       private:
