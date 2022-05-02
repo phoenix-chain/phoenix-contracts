@@ -8,13 +8,13 @@ The EOSIO blockchain platform is unique in that the features and characteristics
 
 Block.one implements and maintains EOSIO open source platform which contains, as an example, the system contracts encapsulating the base functionality for an EOSIO based blockchain.
 
-1. [eosio.bios](action-reference/eosio.bios)
-2. [eosio.system](action-reference/eosio.system)
+1. [eosio.system_contract](action-reference/eosio.system_contract)
+2. [libre.system](action-reference/libre.system)
 3. [eosio.msig](action-reference/eosio.msig)
 4. [eosio.token](action-reference/eosio.token)
 5. [eosio.wrap](action-reference/eosio.wrap)
 
-## Key Concepts Implemented by eosio.system
+## Key Concepts Implemented by libre.system
 
 1. [System](01_key-concepts/01_system.md)
 2. [RAM](01_key-concepts/02_ram.md)

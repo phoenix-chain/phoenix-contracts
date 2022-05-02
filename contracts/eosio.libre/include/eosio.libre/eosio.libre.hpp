@@ -7,13 +7,13 @@
 using namespace eosio;
 using namespace std;
 
-#include <libre.bios/libre.bios.hpp> // LIBRE
+#include <libre.system/libre.system.hpp> // LIBRE
 
 #define SYSsym symbol("SYS", 4)  // LIBRE
 
 
-namespace eosiobios {
-	class bios;
+namespace libresystem {
+	class system_contract;
 }
 
 namespace eosio {

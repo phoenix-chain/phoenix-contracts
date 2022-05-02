@@ -3,7 +3,7 @@ add_contract(eosio.libre eosio.libre ${CMAKE_CURRENT_SOURCE_DIR}/src/eosio.libre
 target_include_directories(eosio.libre
    PUBLIC
    ${CMAKE_CURRENT_SOURCE_DIR}/include
-   ${CMAKE_CURRENT_SOURCE_DIR}/../libre.bios/include)
+   ${CMAKE_CURRENT_SOURCE_DIR}/../libre.system/include)
 
 set_target_properties(eosio.libre
    PROPERTIES

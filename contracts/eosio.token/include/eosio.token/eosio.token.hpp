@@ -5,7 +5,7 @@
 
 #include <string>
 
-namespace eosiosystem {
+namespace libresystem {
    class system_contract;
 }
 

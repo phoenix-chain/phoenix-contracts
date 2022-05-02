@@ -52,10 +52,10 @@ cd ..
 
 # How to deploy the eosio.contracts
 
-## To deploy eosio.bios contract execute the following command:
+## To deploy eosio.system_contract contract execute the following command:
 Let's assume your account name to which you want to deploy the contract is `testerbios`
 ```
-cleos set contract testerbios you_local_path_to/eosio.contracts/build/contracts/eosio.bios/ -p testerbios
+cleos set contract testerbios you_local_path_to/eosio.contracts/build/contracts/eosio.system_contract/ -p testerbios
 ```
 
 ## To deploy eosio.msig contract execute the following command:
@@ -64,10 +64,10 @@ Let's assume your account name to which you want to deploy the contract is `test
 cleos set contract testermsig you_local_path_to/eosio.contracts/build/contracts/eosio.msig/ -p testermsig
 ```
 
-## To deploy eosio.system contract execute the following command:
+## To deploy libre.system contract execute the following command:
 Let's assume your account name to which you want to deploy the contract is `testersystem`
 ```
-cleos set contract testersystem you_local_path_to/eosio.contracts/build/contracts/eosio.system/ -p testersystem
+cleos set contract testersystem you_local_path_to/eosio.contracts/build/contracts/libre.system/ -p testersystem
 ```
 
 ## To deploy eosio.token contract execute the following command:

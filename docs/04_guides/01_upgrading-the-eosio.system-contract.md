@@ -33,7 +33,7 @@ saving abi to original_system_contract.abi
 2. Generate the unsigned transaction which upgrades the system contract:
 
 ```sh
-cleos set contract -s -j -d eosio contracts/eosio.system | tail -n +4 > upgrade_system_contract_trx.json
+cleos set contract -s -j -d eosio contracts/libre.system | tail -n +4 > upgrade_system_contract_trx.json
 ```
 
 The first few lines of the generated file should be something similar to (except with very different numbers for `expiration`, `ref_block_num`, and `ref_block_prefix`):
