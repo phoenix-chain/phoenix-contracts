@@ -9,7 +9,7 @@ As you just learned the relation between a `system account` and a `system contra
 
 |Account|Privileged|Has contract|Description|
 |---|---|---|---|
-|eosio|Yes|It contains the `eosio.system` contract|The main system account on an EOSIO-based blockchain.|
+|eosio|Yes|It contains the `libre.system` contract|The main system account on an EOSIO-based blockchain.|
 |eosio.msig|Yes|It contains the `eosio.msig` contract|Allows the signing of a multi-sig transaction proposal for later execution if all required parties sign the proposal before the expiration time.|
 |eosio.wrap|Yes|It contains the `eosio.wrap` contract.|Simplifies block producer superuser actions by making them more readable and easier to audit.|
 |eosio.token|No|It contains the `eosio.token` contract.|Defines the structures and actions allowing users to create, issue, and manage tokens on EOSIO-based blockchains.|

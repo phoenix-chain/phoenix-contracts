@@ -7,13 +7,10 @@
 using namespace eosio;
 using namespace std;
 
-#include <libre.bios/libre.bios.hpp> // LIBRE
+#include <libre.system/libre.system.hpp> // LIBRE
 
-#define SYSsym symbol("SYS", 4)  // LIBRE
-
-
-namespace eosiobios {
-	class bios;
+namespace libresystem {
+	class system_contract;
 }
 
 namespace eosio {
@@ -72,32 +69,61 @@ namespace eosio {
 			[[eosio::action]]
 			void reqperm(name acc, std::string permission );
 			using reqperm_action = eosio::action_wrapper<"reqperm"_n, &eosiolibre::reqperm>;
+
+			/**
+			* Kick BP
+			*
+			* Removes the ability of specified BP to register as a block producer. This is probably called from
+			* kickbp in eosio.system, which also unregisters them.
+			* 
+			* @param producer
+			*/		
+ 			[[eosio::action]]
+			void kickbp( name producer );
+			using kickbp_action = eosio::action_wrapper<"kickbp"_n, &eosiolibre::kickbp>;
          
 			static std::map<std::string,uint8_t> get_priv( name contract_account, name acc ){
 				std::map<std::string,uint8_t> res;
 
 				//exception for eosio account
-				if ( acc == "eosio"_n ) {
+				if ( acc == "eosio"_n || acc == "libre"_n) {
 					res["createacc"] = 1;
 					res["regprod"] = 1;
 					res["vote"] = 1;
+					res["stake"] = 1;
+					res["transfer"] = 1;
+					res["propose"] = 1;
 					res["setcontract"] = 1;
+					res["blacklist"] = 1;
+					res["setalimits"] = 1;
 					return res;
 				}
 
 				res["createacc"] = 0;
 				res["regprod"] = 0;
 				res["vote"] = 0;
+				res["stake"] = 0;
+				res["transfer"] = 0;
+				res["propose"] = 0;
 				res["setcontract"] = 0;
+				res["blacklist"] = 0;
+				res["setalimits"] = 0;
 
 				permissions perm( contract_account, contract_account.value );
 				auto existing = perm.find( acc.value );
+				
 				if ( existing != perm.end() ) {
 					res["createacc"] = existing->createacc;
 					res["regprod"] = existing->regprod;
 					res["vote"] = existing->vote;
-					res["setcontract"] = existing->setcontract;					
+					res["stake"] = existing->stake;
+					res["transfer"] = existing->transfer;
+					res["propose"] = existing->propose;
+					res["setcontract"] = existing->setcontract;
+					res["blacklist"] = existing->blacklist;
+					res["setalimits"] = existing->setalimits;
 				}
+
 				return res;
 			}
 	private:
@@ -113,6 +139,7 @@ namespace eosio {
 			uint8_t		propose;
 			uint8_t		setcontract;
 			uint8_t		blacklist;
+			uint8_t		setalimits;
 
 			uint64_t primary_key()const { return acc.value; }
 		};
