@@ -80,7 +80,7 @@ namespace eosioboot {
     *
     * eosio.boot is a extremely minimalistic system contract that only supports the native actions and an
     * activate action that allows activating desired protocol features prior to deploying a system contract
-    * with more features such as eosio.bios or eosio.system.
+    * with more features such as eosio.system_contract or libre.system.
     *
     * @{
     */

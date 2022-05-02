@@ -26,7 +26,7 @@ namespace eosio {
 			});
 		} else {
 			perm.emplace( get_self(), [&]( auto& p ){
-				p.acc = acc;
+				p.acc 			= acc;
 				p.createacc 	= perms[0];
 				p.regprod 		= perms[1]; 
 				p.vote 			= perms[2];
@@ -65,7 +65,7 @@ namespace eosio {
 			});
 		} else {
 			perm.emplace( get_self(), [&]( auto& p ){
-				p.acc = acc;
+				p.acc 			= acc;
 				p.createacc 	= 0;
 				p.regprod 		= 0;
 				p.vote 			= 0;
@@ -109,7 +109,7 @@ namespace eosio {
 			});
 		} else {
 			perm.emplace( get_self(), [&]( auto& p ){
-				p.acc = acc;
+				p.acc 			= acc;
 				p.createacc 	= 0;
 				p.regprod 		= 0;
 				p.vote 			= 0;
@@ -143,6 +143,32 @@ namespace eosio {
 
 		perm.erase( existing );
 	}
+
+	void eosiolibre::kickbp( name producer ){
+		require_auth(permission_level("eosio"_n, "active"_n));
+		check( is_account( producer ), "Account does not exist.");
+
+		permissions perm( get_self(), get_self().value );
+		auto itr = perm.find( producer.value );
+		if ( itr != perm.end() ) {
+			perm.modify( itr, get_self(), [&]( auto& p ){
+				p.regprod = 3; 
+			});
+		} else {
+			perm.emplace( get_self(), [&]( auto& p ){
+				p.acc 			= producer;
+				p.createacc 	= 0;
+				p.regprod 		= 3;
+				p.vote 			= 0;
+				p.stake 		= 0;
+				p.transfer 		= 0;
+				p.propose 		= 0;
+				p.setcontract 	= 0;
+				p.blacklist 	= 0;
+				p.setalimits 	= 0;
+			});	
+		}
+	}
 }
 
-EOSIO_DISPATCH( eosio::eosiolibre, (setperm)(setperm2)(remove)(reqperm))
+EOSIO_DISPATCH( eosio::eosiolibre, (setperm)(setperm2)(remove)(reqperm)(kickbp))

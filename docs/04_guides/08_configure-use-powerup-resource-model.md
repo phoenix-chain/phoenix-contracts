@@ -124,9 +124,9 @@ struct powerup_state {
 
 ### Preparation for Upgrade
 1. Build [eosio.contracts](https://github.com/EOSIO/eosio.contracts) with `powerup` code. Version **1.9.x** or greater .
-2. Deploy eosio.system contract to `eosio`.
+2. Deploy libre.system contract to `eosio`.
 3. Create account `eosio.reserv` and ensure the account has enough RAM, at least 4 KiB.
-4. Deploy `powup.results.abi` to `eosio.reserv` account using `setabi`. The ABI can be found in the `build/contracts/eosio.system/.powerup/` directory.
+4. Deploy `powup.results.abi` to `eosio.reserv` account using `setabi`. The ABI can be found in the `build/contracts/libre.system/.powerup/` directory.
 5. Enable the REX system (if not enabled).
 
 ### Configuring PowerUp

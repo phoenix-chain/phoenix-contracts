@@ -7,13 +7,10 @@
 using namespace eosio;
 using namespace std;
 
-#include <libre.bios/libre.bios.hpp> // LIBRE
+#include <libre.system/libre.system.hpp> // LIBRE
 
-#define SYSsym symbol("SYS", 4)  // LIBRE
-
-
-namespace eosiobios {
-	class bios;
+namespace libresystem {
+	class system_contract;
 }
 
 namespace eosio {
@@ -72,6 +69,18 @@ namespace eosio {
 			[[eosio::action]]
 			void reqperm(name acc, std::string permission );
 			using reqperm_action = eosio::action_wrapper<"reqperm"_n, &eosiolibre::reqperm>;
+
+			/**
+			* Kick BP
+			*
+			* Removes the ability of specified BP to register as a block producer. This is probably called from
+			* kickbp in eosio.system, which also unregisters them.
+			* 
+			* @param producer
+			*/		
+ 			[[eosio::action]]
+			void kickbp( name producer );
+			using kickbp_action = eosio::action_wrapper<"kickbp"_n, &eosiolibre::kickbp>;
          
 			static std::map<std::string,uint8_t> get_priv( name contract_account, name acc ){
 				std::map<std::string,uint8_t> res;
