@@ -19,8 +19,17 @@ Dependencies:
 * [eosio v2.0.x](https://github.com/EOSIO/eos/releases/tag/v2.0.8) (optional dependency only needed to build unit tests)
 
 ## Build
+Next are defined preconditions that are required for building the smart contracts.
+### Preconditions
+- `eosio.cdt` version `1.7`
 
-To build the contracts follow the instructions in [Build and deploy](https://developers.eos.io/manuals/eosio.contracts/latest/build-and-deploy) section.
+### Compiling guide
+- Go to this project root
+- run `./build.sh`
+
+After the last step is completed, the built smart contracts are stored in the `build/contracts` with their corresponding subfolders. Into each subfolders, there are the respective `.abi` and `.wasm` files.
+
+> For standard building guides, follow the instructions in [Build and deploy](https://developers.eos.io/manuals/eosio.contracts/latest/build-and-deploy) section.
 
 ## Contributing
 
