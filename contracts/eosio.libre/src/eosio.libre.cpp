@@ -144,7 +144,7 @@ namespace eosio {
 		perm.erase( existing );
 	}
 
-	void eosiolibre::kickbp( name producer ){
+	void eosiolibre::kickbp( name producer ) {
 		require_auth(permission_level("eosio"_n, "active"_n));
 		check( is_account( producer ), "Account does not exist.");
 

@@ -81,7 +81,7 @@ namespace libresystem {
 
    // LIBRE
    void system_contract::kickbp( const name& producer ) {
-         require_auth(permission_level("eosio"_n, "committee"_n));
+         require_auth(permission_level("eosio"_n, "active"_n));
 
          const auto& prod = _producers.get( producer.value, "producer not found" );
          _producers.modify( prod, get_self(), [&]( producer_info& info ){
