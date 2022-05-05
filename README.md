@@ -19,7 +19,8 @@ Dependencies:
 * [eosio v2.0.x](https://github.com/EOSIO/eos/releases/tag/v2.0.8) (optional dependency only needed to build unit tests)
 
 ## Build
-Next are defined preconditions that are required for building the smart contracts.
+The following pre-conditions are required for building the smart contracts.
+
 ### Preconditions
 - `eosio.cdt` version `1.7`
 

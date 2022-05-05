@@ -108,7 +108,7 @@ namespace eosio {
 				if(permission == "setalimits" 	&& existing->setalimits != 4 	&& existing->setalimits != 1 ) 	{ p.setalimits = 2; }
 			});
 		} else {
-			perm.emplace( get_self(), [&]( auto& p ){
+			perm.emplace( get_self(), [&]( auto& p ) {
 				p.acc 			= acc;
 				p.createacc 	= 0;
 				p.regprod 		= 0;
