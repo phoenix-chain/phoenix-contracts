@@ -17,6 +17,47 @@
 #include <string>
 #include <type_traits>
 
+namespace eosio {
+   constexpr name stake_libre_account{"stake.libre"_n};
+
+	struct [[eosio::table]] stake
+    {
+        uint64_t       index;
+        name           account;
+        time_point_sec stake_date;
+        uint64_t       stake_length;
+        float          mint_bonus;
+        asset          libre_staked;
+        float          apy;
+        asset          payout;
+        time_point_sec payout_date;
+        uint64_t       status;
+
+        auto primary_key() const
+        {
+            return index;
+        }
+    };
+    typedef multi_index< name( "stake" ), stake > stake_table;
+
+    /**
+    *
+    *  Get the total staked for an account
+    *
+    * @param acc - Account to get the staked tokens
+    *
+    * @return Total staked tokens, -1 if account does not exist
+    */
+   //  int64_t get_staked(name acc){
+   //      stake_table _stake(stake_libre_account, stake_libre_account.value);
+   //      auto it = _stake.find(acc.value);
+
+   //      if( it == _stake.end() ) { return -1; }
+
+   //      return it->libre_staked.amount;
+   //  }
+}
+
 namespace libresystem {
 
    using eosio::asset;

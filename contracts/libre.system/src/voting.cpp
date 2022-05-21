@@ -55,7 +55,6 @@ namespace libresystem {
             info.producer_authority.emplace( producer_authority );
          });
       }
-
    }
 
    void system_contract::regproducer( const name& producer, const eosio::public_key& producer_key, const std::string& url, uint16_t location ) {
@@ -137,6 +136,7 @@ namespace libresystem {
 
    void system_contract::voteproducer( const name& voter_name, const std::vector<name>& producers ) {
       require_auth( voter_name );
+      // TODO: VALIDATE THE FOLLOWING LINE
       // vote_stake_updater( voter_name );
       update_votes( voter_name, producers, true );
       // auto rex_itr = _rexbalance.find( voter_name.value );
@@ -144,6 +144,23 @@ namespace libresystem {
       //    check_voting_requirement( voter_name, "voter holding REX tokens must vote for at least 21 producers" );
       // }
    }
+
+   /**
+    *
+    *  Get the total staked for an account
+    *
+    * @param acc - Account to get the staked tokens
+    *
+    * @return Total staked tokens, -1 if account does not exist
+    */
+    int64_t get_staked(name acc){
+        stake_table _stake(stake_libre_account, stake_libre_account.value);
+        auto it = _stake.find(acc.value);
+
+        if( it == _stake.end() ) { return -1; }
+
+        return it->libre_staked.amount;
+    }
 
    void system_contract::update_votes( const name& voter_name, const std::vector<name>& producers, bool voting ) {
       //validate input
@@ -155,7 +172,9 @@ namespace libresystem {
 
       auto voter = _voters.find( voter_name.value );
       // TODO: UPDATE FOLLOWING VALIDATION
-      check( voter != _voters.end(), "user must stake before they can vote" ); /// staking creates voter object
+      int64_t total_voter_staked = get_staked(voter_name);
+      check( total_voter_staked > -1, "user must stake before they can vote" );
+      // check( voter != _voters.end(), "user must stake before they can vote" ); /// staking creates voter object
 
       /**
        * The first time someone votes we calculate and set last_vote_weight. Since they cannot unstake until
@@ -163,13 +182,13 @@ namespace libresystem {
        * their first vote and should consider their stake activated.
        */
       if( _gstate.thresh_activated_stake_time == time_point() && voter->last_vote_weight <= 0.0 ) {
-         _gstate.total_activated_stake += voter->staked;
+         _gstate.total_activated_stake += total_voter_staked;
          if( _gstate.total_activated_stake >= min_activated_stake ) {
             _gstate.thresh_activated_stake_time = current_time_point();
          }
       }
 
-      auto new_vote_weight = stake2vote( voter->staked );
+      auto new_vote_weight = stake2vote( total_voter_staked );
 
       std::map<name, std::pair<double, bool /*new*/> > producer_deltas;
       if ( voter->last_vote_weight > 0 ) {
@@ -215,10 +234,18 @@ namespace libresystem {
 
       // update_total_votepay_share( ct, -total_inactive_vpay_share, delta_change_rate );
 
-      _voters.modify( voter, same_payer, [&]( auto& av ) {
-         av.last_vote_weight = new_vote_weight;
-         av.producers = producers;
-      });
+      if(voter == _voters.end()) {
+         _voters.emplace( same_payer, [&]( auto& v ) {
+            v.owner  = voter_name;
+            v.staked = total_voter_staked;
+         });
+      }
+      else {
+         _voters.modify( voter, same_payer, [&]( auto& av ) {
+            av.last_vote_weight = new_vote_weight;
+            av.producers = producers;
+         });
+      }
    }
 
 
