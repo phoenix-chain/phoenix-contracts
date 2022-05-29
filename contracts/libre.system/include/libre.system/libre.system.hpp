@@ -20,42 +20,39 @@
 namespace eosio {
    constexpr name stake_libre_account{"stake.libre"_n};
 
+   enum stake_status : uint64_t
+   {
+      STAKE_IN_PROGRESS = 1,
+      STAKE_COMPLETED = 2,
+      STAKE_CANCELED = 3
+   };
+
 	struct [[eosio::table]] stake
-    {
-        uint64_t       index;
-        name           account;
-        time_point_sec stake_date;
-        uint64_t       stake_length;
-        float          mint_bonus;
-        asset          libre_staked;
-        float          apy;
-        asset          payout;
-        time_point_sec payout_date;
-        uint64_t       status;
+   {
+      uint64_t       index;
+      name           account;
+      time_point_sec stake_date;
+      uint64_t       stake_length;
+      float          mint_bonus;
+      asset          libre_staked;
+      float          apy;
+      asset          payout;
+      time_point_sec payout_date;
+      uint64_t       status;
 
-        auto primary_key() const
-        {
-            return index;
-        }
-    };
-    typedef multi_index< name( "stake" ), stake > stake_table;
+      auto primary_key() const
+      {
+         return index;
+      }
 
-    /**
-    *
-    *  Get the total staked for an account
-    *
-    * @param acc - Account to get the staked tokens
-    *
-    * @return Total staked tokens, -1 if account does not exist
-    */
-   //  int64_t get_staked(name acc){
-   //      stake_table _stake(stake_libre_account, stake_libre_account.value);
-   //      auto it = _stake.find(acc.value);
-
-   //      if( it == _stake.end() ) { return -1; }
-
-   //      return it->libre_staked.amount;
-   //  }
+      uint64_t by_account() const
+      {
+         return account.value;
+      }
+   };
+   typedef multi_index< name( "stake" ),
+            stake,
+            indexed_by< name( "account" ), const_mem_fun< stake, uint64_t, &stake::by_account > > > stake_table;   
 }
 
 namespace libresystem {
@@ -223,18 +220,13 @@ namespace libresystem {
    // - `staked` the amount staked
    struct [[eosio::table, eosio::contract("libre.system")]] voter_info {
       name                owner;     /// the voter
-      std::vector<name>   producers; /// the producers approved by this voter
+      name                producer; /// the producers approved by this voter
       int64_t             staked = 0;
-
-      //  Every time a vote is cast we must first "undo" the last vote weight, before casting the
-      //  new vote weight.  Vote weight is calculated as:
-      //  stated.amount * 2 ^ ( weeks_since_launch/weeks_per_year)
-      double              last_vote_weight = 0; /// the vote weight cast the last time the vote was updated
 
       uint64_t primary_key()const { return owner.value; }
 
       // explicit serialization macro is not necessary, used here only to improve compilation time
-      EOSLIB_SERIALIZE( voter_info, (owner)(producers)(staked)(last_vote_weight) )
+      EOSLIB_SERIALIZE( voter_info, (owner)(producer)(staked) )
    };
 
    typedef eosio::multi_index< "voters"_n, voter_info >  voters_table;
@@ -376,7 +368,10 @@ namespace libresystem {
           * @post Every producer newly voted for will have vote increased by new vote amount
           */
          [[eosio::action]]
-         void voteproducer( const name& voter, const std::vector<name>& producers );
+         void voteproducer( const name& voter, const name& producer );
+
+         [[eosio::action]]
+         void vonstake( const name& staker );
 
          /**
           * Set the blockchain parameters. By tunning these parameters a degree of
@@ -416,6 +411,7 @@ namespace libresystem {
          using regproducer_action = eosio::action_wrapper<"regproducer"_n, &system_contract::regproducer>;
          using unregprod_action = eosio::action_wrapper<"unregprod"_n, &system_contract::unregprod>;
          using voteproducer_action = eosio::action_wrapper<"voteproducer"_n, &system_contract::voteproducer>;
+         using vonstake_action = eosio::action_wrapper<"vonstake"_n, &system_contract::vonstake>;
          using setparams_action = eosio::action_wrapper<"setparams"_n, &system_contract::setparams>;
 
          using kickbp_action = eosio::action_wrapper<"kickbp"_n, &system_contract::kickbp>;                       // LIBRE
@@ -429,7 +425,7 @@ namespace libresystem {
 
          // defined in voting.cpp
          void register_producer( const name& producer, const eosio::block_signing_authority& producer_authority, const std::string& url, uint16_t location );
-         void update_votes( const name& voter, const std::vector<name>& producers, bool voting );
+         void update_votes( const name& voter, const name& producer, bool voting );
          void update_elected_producers( const block_timestamp& timestamp );
 
    };

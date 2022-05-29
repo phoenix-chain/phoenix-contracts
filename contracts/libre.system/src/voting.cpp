@@ -128,126 +128,107 @@ namespace libresystem {
       }
    }
 
-   double stake2vote( int64_t staked ) {
-      /// TODO subtract 2080 brings the large numbers closer to this decade
-      double weight = int64_t( (current_time_point().sec_since_epoch() - (block_timestamp::block_timestamp_epoch / 1000)) / (seconds_per_day * 7) )  / double( 52 );
-      return double(staked) * std::pow( 2, weight );
-   }
-
-   void system_contract::voteproducer( const name& voter_name, const std::vector<name>& producers ) {
+   void system_contract::voteproducer( const name& voter_name, const name& producer ) {
       require_auth( voter_name );
-      // TODO: VALIDATE THE FOLLOWING LINE
       // vote_stake_updater( voter_name );
-      update_votes( voter_name, producers, true );
+      update_votes( voter_name, producer, true );
       // auto rex_itr = _rexbalance.find( voter_name.value );
       // if( rex_itr != _rexbalance.end() && rex_itr->rex_balance.amount > 0 ) {
       //    check_voting_requirement( voter_name, "voter holding REX tokens must vote for at least 21 producers" );
       // }
    }
+   
+   void system_contract::vonstake( const name& staker ) {
+      require_auth( "stake.libre"_n );
 
-   /**
-    *
-    *  Get the total staked for an account
-    *
-    * @param acc - Account to get the staked tokens
-    *
-    * @return Total staked tokens, -1 if account does not exist
-    */
-    int64_t get_staked(name acc){
-        stake_table _stake(stake_libre_account, stake_libre_account.value);
-        auto it = _stake.find(acc.value);
+      auto voter = _voters.find( staker.value );
 
-        if( it == _stake.end() ) { return -1; }
+      if( voter != _voters.end()) {
+         update_votes( staker, voter->producer, false );
+      }
+   }
 
-        return it->libre_staked.amount;
-    }
+   int64_t get_staked(name acc) {
+      int64_t totalVotes = 0;
+      stake_table _stake(stake_libre_account, stake_libre_account.value);
+      auto stake_index =_stake.get_index< name( "account" ) >();
+      bool exist = false;
 
-   void system_contract::update_votes( const name& voter_name, const std::vector<name>& producers, bool voting ) {
-      //validate input
-      
-      check( producers.size() <= 30, "attempt to vote for too many producers" );
-      for( size_t i = 1; i < producers.size(); ++i ) {
-         check( producers[i-1] < producers[i], "producer votes must be unique and sorted" );
+      for ( auto itr = stake_index.lower_bound( acc.value ); itr != stake_index.upper_bound( acc.value ); itr++ ) {
+         exist |= itr->account.value == acc.value;
+
+         if ( itr->account.value == acc.value && itr->status == stake_status::STAKE_IN_PROGRESS) {
+            totalVotes += itr->libre_staked.amount;
+         }
       }
 
-      auto voter = _voters.find( voter_name.value );
-      // TODO: UPDATE FOLLOWING VALIDATION
-      int64_t total_voter_staked = get_staked(voter_name);
-      check( total_voter_staked > -1, "user must stake before they can vote" );
-      // check( voter != _voters.end(), "user must stake before they can vote" ); /// staking creates voter object
+      return exist ? totalVotes : -1;
+   }
 
-      /**
-       * The first time someone votes we calculate and set last_vote_weight. Since they cannot unstake until
-       * after the chain has been activated, we can use last_vote_weight to determine that this is
-       * their first vote and should consider their stake activated.
-       */
-      if( _gstate.thresh_activated_stake_time == time_point() && voter->last_vote_weight <= 0.0 ) {
+   void system_contract::update_votes( const name& voter_name, const name& producer, bool voting ) {
+      auto voter = _voters.find( voter_name.value );
+      
+      int64_t total_voter_staked = get_staked(voter_name);
+
+      if ( !voting && total_voter_staked == -1 ) return;
+
+      check( total_voter_staked > -1, "user must stake before they can vote" );
+      int64_t old_total_voter_staked = voter != _voters.end() ? voter->staked : 0;
+
+      if( _gstate.thresh_activated_stake_time == time_point() ) {
          _gstate.total_activated_stake += total_voter_staked;
          if( _gstate.total_activated_stake >= min_activated_stake ) {
             _gstate.thresh_activated_stake_time = current_time_point();
          }
       }
 
-      auto new_vote_weight = stake2vote( total_voter_staked );
+      std::map<name, double> producer_delta;
 
-      std::map<name, std::pair<double, bool /*new*/> > producer_deltas;
-      if ( voter->last_vote_weight > 0 ) {
-         for( const auto& p : voter->producers ) {
-            auto& d = producer_deltas[p];
-            d.first -= voter->last_vote_weight;
-            d.second = false;
-         }
+      const name old_producer = voter->producer;
+      const name new_producer = producer;
+
+      if ( old_producer.value == new_producer.value ) {
+         producer_delta[old_producer] = total_voter_staked - old_total_voter_staked;
+      } else {
+         producer_delta[old_producer] = 0 - old_total_voter_staked;
+         producer_delta[new_producer] = total_voter_staked;
       }
 
-      if( new_vote_weight >= 0 ) {
-         for( const auto& p : producers ) {
-            auto& d = producer_deltas[p];
-            d.first += new_vote_weight;
-            d.second = true;
-         }
-      }
-
-      const auto ct = current_time_point();
-      double delta_change_rate         = 0.0;
-      double total_inactive_vpay_share = 0.0;
-      for( const auto& pd : producer_deltas ) {
-         auto pitr = _producers.find( pd.first.value );
-         if( pitr != _producers.end() ) {
-            if( voting && !pitr->active() && pd.second.second /* from new set */ ) {
-               check( false, ( "producer " + pitr->owner.to_string() + " is not currently registered" ).data() );
+      for( const auto&  pd : producer_delta ) {
+         auto p_itr = _producers.find( pd.first.value );
+         if( p_itr != _producers.end() ) {
+            if( voting && !p_itr->active() ) {
+               check( false, ( "producer " + p_itr->owner.to_string() + " is not currently registered" ).data() );
             }
-            double init_total_votes = pitr->total_votes;
-            _producers.modify( pitr, same_payer, [&]( auto& p ) {
-               p.total_votes += pd.second.first;
+            double init_total_votes = p_itr->total_votes;
+            _producers.modify( p_itr, same_payer, [&]( auto& p ) {
+               p.total_votes += double(pd.second);
                if ( p.total_votes < 0 ) { // floating point arithmetics can give small negative numbers
                   p.total_votes = 0;
                }
-               _gstate.total_producer_vote_weight += pd.second.first;
-               //check( p.total_votes >= 0, "something bad happened" );
+               _gstate.total_producer_vote_weight += double(pd.second);
             });
          } else {
-            if( pd.second.second ) {
+            if( pd.second ) {
                check( false, ( "producer " + pd.first.to_string() + " is not registered" ).data() );
             }
          }
       }
 
-      // update_total_votepay_share( ct, -total_inactive_vpay_share, delta_change_rate );
-
       if(voter == _voters.end()) {
-         _voters.emplace( same_payer, [&]( auto& v ) {
+         _voters.emplace( voter_name, [&]( auto& v ) {
             v.owner  = voter_name;
             v.staked = total_voter_staked;
+            v.producer = producer;
          });
       }
       else {
-         _voters.modify( voter, same_payer, [&]( auto& av ) {
-            av.last_vote_weight = new_vote_weight;
-            av.producers = producers;
+         _voters.modify( voter, same_payer, [&]( auto& v ) {
+            v.producer = producer;
+            v.staked = total_voter_staked;
          });
       }
    }
-
 
    // LIBRE
    void system_contract::kickbp( const name& producer ) {
