@@ -40,5 +40,8 @@ Here is a list of cleos commands that could help to interact with these smart co
 ### unregprod
 `cleos push action eosio unregprod '{"producer":"<name>"}' -p <producer>@active`
 
+## voteproducer
+`cleos push action eosio voteproducer '{"voter": "<name>", "producer": "<name>"}' -p <voter>@active`
+
 ### kickbp
 `cleos push action eosio kickbp '{"producer":"<name>"}' -p eosio@active`

@@ -1,6 +1,7 @@
 add_contract(libre.system libre.system
    ${CMAKE_CURRENT_SOURCE_DIR}/src/libre.system.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/native.cpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/src/producer_pay.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/voting.cpp
 )
 
