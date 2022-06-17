@@ -8,21 +8,40 @@ namespace libresystem {
    using eosio::current_time_point;
    using eosio::token;
 
+   double get_continuous_rate(int64_t annual_rate) {
+      return std::log1p(double(annual_rate)/double(100*inflation_precision));
+   }
+
    system_contract::system_contract( name s, name code, datastream<const char*> ds )
    :native(s,code,ds),
     _voters(get_self(), get_self().value),
     _producers(get_self(), get_self().value),
     _global(get_self(), get_self().value),
-    _global2(get_self(), get_self().value)
+    _global2(get_self(), get_self().value),
+    _global4(get_self(), get_self().value)
    {
       _gstate  = _global.exists() ? _global.get() : get_default_parameters();
       _gstate2 = _global2.exists() ? _global2.get() : eosio_global_state2{};
+      _gstate4 = _global4.exists() ? _global4.get() : get_default_inflation_parameters();
    }
 
    eosio_global_state system_contract::get_default_parameters() {
       eosio_global_state dp;
       get_blockchain_parameters(dp);
       return dp;
+   }
+
+   eosio_global_state4 system_contract::get_default_inflation_parameters() {
+      eosio_global_state4 gs4;
+      gs4.continuous_rate      = get_continuous_rate(default_annual_rate);
+      gs4.inflation_pay_factor = default_inflation_pay_factor;
+      return gs4;
+   }
+
+   symbol system_contract::core_symbol()const {
+      // const static auto sym = get_core_symbol( _rammarket );
+      const static auto sym = symbol(symbol_code("EOS"), 4);
+      return sym;
    }
 
    system_contract::~system_contract() {
