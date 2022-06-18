@@ -417,6 +417,21 @@ namespace libresystem {
          void claimrewards( const name& owner );
 
          /**
+          * Change the annual inflation rate of the core token supply and specify how
+          * the new issued tokens will be distributed based on the following structure.
+          *
+          * @param annual_rate - Annual inflation rate of the core token supply.
+          *     (eg. For 5% Annual inflation => annual_rate=500
+          *          For 1.5% Annual inflation => annual_rate=150
+          * @param inflation_pay_factor - Inverse of the fraction of the inflation used to reward block producers.
+          *     The remaining inflation will be sent to the `eosio.saving` account.
+          *     (eg. For 20% of inflation going to block producer rewards   => inflation_pay_factor = 50000
+          *          For 100% of inflation going to block producer rewards  => inflation_pay_factor = 10000).
+          */
+         [[eosio::action]]
+         void setinflation( int64_t annual_rate, int64_t inflation_pay_factor );
+
+         /**
           * Set the blockchain parameters. By tunning these parameters a degree of
           * customization can be achieved.
           * @param params - New blockchain parameters to set.
@@ -457,6 +472,7 @@ namespace libresystem {
          using vonstake_action = eosio::action_wrapper<"vonstake"_n, &system_contract::vonstake>;
          using setparams_action = eosio::action_wrapper<"setparams"_n, &system_contract::setparams>;
          using claimrewards_action = eosio::action_wrapper<"claimrewards"_n, &system_contract::claimrewards>;
+         using setinflation_action = eosio::action_wrapper<"setinflation"_n, &system_contract::setinflation>;
 
          using kickbp_action = eosio::action_wrapper<"kickbp"_n, &system_contract::kickbp>;                       // LIBRE
 

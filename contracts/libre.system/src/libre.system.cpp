@@ -76,8 +76,19 @@ namespace libresystem {
       auto prod = _producers.find( producer.value );
       check( prod != _producers.end(), "producer not found" );
       _producers.modify( prod, same_payer, [&](auto& p) {
-            p.deactivate();
-         });
+         p.deactivate();
+      });
+   }
+
+   void system_contract::setinflation( int64_t annual_rate, int64_t inflation_pay_factor ) {
+      require_auth(get_self());
+      check(annual_rate >= 0, "annual_rate can't be negative");
+      if ( inflation_pay_factor < pay_factor_precision ) {
+         check( false, "inflation_pay_factor must not be less than " + std::to_string(pay_factor_precision) );
+      }
+      _gstate4.continuous_rate      = get_continuous_rate(annual_rate);
+      _gstate4.inflation_pay_factor = inflation_pay_factor;
+      _global4.set( _gstate4, get_self() );
    }
 
    /**
