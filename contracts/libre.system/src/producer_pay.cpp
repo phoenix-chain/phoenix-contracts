@@ -22,8 +22,8 @@ namespace libresystem {
       _gstate2.last_block_num = timestamp;
 
       /** until activation, no new rewards are paid */
-      // if( _gstate.thresh_activated_stake_time == time_point() )
-      //    return;
+      if( _gstate.thresh_activated_stake_time == time_point() )
+         return;
 
       if( _gstate.last_pervote_bucket_fill == time_point() )  // start the presses
          _gstate.last_pervote_bucket_fill = current_time_point();
@@ -40,9 +40,6 @@ namespace libresystem {
          });
       }
 
-      if( _gstate.last_pervote_bucket_fill == time_point() )  /// start the presses
-         _gstate.last_pervote_bucket_fill = current_time_point();
-
       /// only update block producers once every minute, block_timestamp is in half seconds
       if( timestamp.slot - _gstate.last_producer_schedule_update.slot > 90 ) {
          update_elected_producers( timestamp );
@@ -55,6 +52,7 @@ namespace libresystem {
       const auto& prod = _producers.get( owner.value );
       check( prod.active(), "producer does not have an active key" );
 
+      // TODO: out fail error message of the check (%)
       check( _gstate.thresh_activated_stake_time != time_point(),
                     "cannot claim rewards until the chain is activated (at least 15% of all tokens participate in voting)" );
 

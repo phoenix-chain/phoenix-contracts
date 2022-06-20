@@ -98,7 +98,8 @@ namespace libresystem {
    static constexpr int64_t  useconds_per_hour     = int64_t(seconds_per_hour) * 1000'000ll;
    static constexpr uint32_t blocks_per_day        = 2 * seconds_per_day; // half seconds per day
 
-   static constexpr int64_t  min_activated_stake   = 150'000'000'0000;
+   // static constexpr int64_t  min_activated_stake   = 150'000'000'0000;
+   static constexpr int64_t  min_activated_stake   = 200'0000;
 
    static constexpr int64_t  inflation_precision           = 100;     // 2 decimals
    static constexpr int64_t  default_annual_rate           = 500;     // 5% annual rate
