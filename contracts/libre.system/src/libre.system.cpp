@@ -14,6 +14,7 @@ namespace libresystem {
 
    system_contract::system_contract( name s, name code, datastream<const char*> ds )
    :native(s,code,ds),
+    _payments(get_self(), get_self().value),
     _voters(get_self(), get_self().value),
     _producers(get_self(), get_self().value),
     _global(get_self(), get_self().value),
@@ -40,7 +41,7 @@ namespace libresystem {
 
    symbol system_contract::core_symbol()const {
       // const static auto sym = get_core_symbol( _rammarket );
-      const static auto sym = symbol(symbol_code("EOS"), 4);
+      const static auto sym = symbol(symbol_code("LIBRE"), 0);
       return sym;
    }
 

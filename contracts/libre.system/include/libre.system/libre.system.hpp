@@ -94,12 +94,13 @@ namespace libresystem {
    static constexpr uint32_t seconds_per_day       = 24 * 3600;
    static constexpr uint32_t seconds_per_hour      = 3600;
    static constexpr int64_t  useconds_per_year     = int64_t(seconds_per_year) * 1000'000ll;
-   static constexpr int64_t  useconds_per_day      = int64_t(seconds_per_day) * 1000'000ll;
+   // static constexpr int64_t  useconds_per_day      = int64_t(seconds_per_day) * 1000'000ll;
+   static constexpr int64_t  useconds_per_day      = 60000'000ll;
    static constexpr int64_t  useconds_per_hour     = int64_t(seconds_per_hour) * 1000'000ll;
    static constexpr uint32_t blocks_per_day        = 2 * seconds_per_day; // half seconds per day
 
    // static constexpr int64_t  min_activated_stake   = 150'000'000'0000;
-   static constexpr int64_t  min_activated_stake   = 200'0000;
+   static constexpr int64_t  min_activated_stake   = 200;
 
    static constexpr int64_t  inflation_precision           = 100;     // 2 decimals
    static constexpr int64_t  default_annual_rate           = 500;     // 5% annual rate
@@ -128,6 +129,7 @@ namespace libresystem {
       int64_t              total_ram_stake = 0;
 
       block_timestamp      last_producer_schedule_update;
+      time_point           last_updated_reward;
       time_point           last_pervote_bucket_fill;
       int64_t              perblock_bucket = 0;
       uint32_t             total_unpaid_blocks = 0; /// all blocks which have been produced but not paid
@@ -140,7 +142,7 @@ namespace libresystem {
       // explicit serialization macro is not necessary, used here only to improve compilation time
       EOSLIB_SERIALIZE_DERIVED( eosio_global_state, eosio::blockchain_parameters,
                                 (max_ram_size)(total_ram_bytes_reserved)(total_ram_stake)
-                                (last_producer_schedule_update)(last_pervote_bucket_fill)
+                                (last_producer_schedule_update)(last_updated_reward)(last_pervote_bucket_fill)
                                 (perblock_bucket)(total_unpaid_blocks)(total_activated_stake)(thresh_activated_stake_time)
                                 (last_producer_schedule_size)(total_producer_vote_weight)(last_name_close) )
    };
@@ -151,7 +153,7 @@ namespace libresystem {
 
       uint16_t          new_ram_per_block = 0;
       block_timestamp   last_ram_increase;
-      block_timestamp   last_block_num; /* deprecated */
+      block_timestamp   last_block_num;
       double            total_producer_votepay_share = 0;
       uint8_t           revision = 0; ///< used to track version updates in the future.
 
@@ -256,6 +258,22 @@ namespace libresystem {
       EOSLIB_SERIALIZE( voter_info, (owner)(producer)(staked) )
    };
 
+   // Block Producer payment. Block Producer payment stores information about the payment:
+   // - `id` of the payment
+   // - `producer` the producer to pay
+   // - `amount` the amount to pay
+   struct [[eosio::table, eosio::contract("libre.system")]] payment_info {
+      name                producer;
+      int64_t             amount = 0;
+
+      uint64_t primary_key()const { return producer.value; }
+
+      // explicit serialization macro is not necessary, used here only to improve compilation time
+      EOSLIB_SERIALIZE( payment_info, (producer)(amount) )
+   };
+
+   typedef eosio::multi_index< "payments"_n, payment_info >  payments_table;
+
    typedef eosio::multi_index< "voters"_n, voter_info >  voters_table;
 
    typedef eosio::multi_index< "producers"_n, producer_info,
@@ -274,6 +292,7 @@ namespace libresystem {
    class [[eosio::contract("libre.system")]] system_contract : public native {
 
       private:
+         payments_table           _payments;
          voters_table             _voters;
          producers_table          _producers;
          global_state_singleton   _global;
@@ -411,11 +430,15 @@ namespace libresystem {
          void vonstake( const name& staker );
 
          /**
-          * Claim rewards action, claims block producing and vote rewards.
+          * Claim rewards action, claims block producing rewards.
           * @param owner - producer account claiming per-block and per-vote rewards.
           */
          [[eosio::action]]
          void claimrewards( const name& owner );
+
+         // defined in producer_pay.cpp
+         [[eosio::action]]
+         void updatereward();
 
          /**
           * Change the annual inflation rate of the core token supply and specify how
@@ -473,6 +496,7 @@ namespace libresystem {
          using vonstake_action = eosio::action_wrapper<"vonstake"_n, &system_contract::vonstake>;
          using setparams_action = eosio::action_wrapper<"setparams"_n, &system_contract::setparams>;
          using claimrewards_action = eosio::action_wrapper<"claimrewards"_n, &system_contract::claimrewards>;
+         using updaterewards_action = eosio::action_wrapper<"updatereward"_n, &system_contract::updatereward>;
          using setinflation_action = eosio::action_wrapper<"setinflation"_n, &system_contract::setinflation>;
 
          using kickbp_action = eosio::action_wrapper<"kickbp"_n, &system_contract::kickbp>;                       // LIBRE
@@ -491,6 +515,8 @@ namespace libresystem {
          void update_votes( const name& voter, const name& producer, bool voting );
          void update_elected_producers( const block_timestamp& timestamp );
 
+         // defined in producer_pay.cpp
+         uint8_t calculate_pay_amount();
    };
 
 }

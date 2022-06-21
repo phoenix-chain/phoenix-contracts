@@ -7,10 +7,19 @@ namespace libresystem {
    using eosio::microseconds;
    using eosio::token;
 
+   uint8_t system_contract::calculate_pay_amount() {
+      const int64_t six_months = microseconds(useconds_per_year).count() / 2;
+      const int64_t elapse = _gstate2.last_block_num.slot / six_months;
+
+      if ( elapse < 6 ) return 4;
+      else if ( elapse >= 6 && elapse < 12 ) return 2;
+      else return 1;
+   }
+
    void system_contract::onblock( ignore<block_header> ) {
       using namespace eosio;
 
-      require_auth(get_self());
+      require_auth( get_self() );
 
       block_timestamp timestamp;
       name producer;
@@ -22,11 +31,14 @@ namespace libresystem {
       _gstate2.last_block_num = timestamp;
 
       /** until activation, no new rewards are paid */
-      if( _gstate.thresh_activated_stake_time == time_point() )
-         return;
+      // if( _gstate.thresh_activated_stake_time == time_point() )
+      //    return;
 
       if( _gstate.last_pervote_bucket_fill == time_point() )  // start the presses
          _gstate.last_pervote_bucket_fill = current_time_point();
+
+      if( _gstate.last_updated_reward == time_point() )
+         _gstate.last_updated_reward = current_time_point();
 
       /**
        * At startup the initial producer may not be one that is registered / elected
@@ -40,76 +52,85 @@ namespace libresystem {
          });
       }
 
+      if ( current_time_point() - _gstate.last_updated_reward > microseconds(useconds_per_day) && _gstate.last_updated_reward > time_point() ) {
+         updatereward();
+      }
+      
+
       /// only update block producers once every minute, block_timestamp is in half seconds
       if( timestamp.slot - _gstate.last_producer_schedule_update.slot > 90 ) {
          update_elected_producers( timestamp );
       }
    }
 
+   void system_contract::updatereward() {
+      const auto ct = current_time_point();
+
+      // TODO: add token_supply validation to dont exceed the max_supply
+      // const asset token_supply   = token::get_supply(token_account, core_symbol().code() );
+      const auto usecs_since_last_updated_reward = (ct - _gstate.last_updated_reward).count();
+
+      for (auto p_itr = _producers.begin(); p_itr != _producers.end(); p_itr++) {
+         if (!p_itr->unpaid_blocks) continue;
+         
+         int64_t new_tokens = calculate_pay_amount() * p_itr->unpaid_blocks;
+
+         {
+            token::issue_action issue_act{ token_account, { {get_self(), active_permission} } };
+            issue_act.send( get_self(), asset(new_tokens, core_symbol()), "issue tokens for producer pay");
+         }
+         {
+            token::transfer_action transfer_act{ token_account, { {get_self(), active_permission} } };
+            transfer_act.send( get_self(), bpay_account, asset(new_tokens, core_symbol()), "fund per-block bucket"
+               + " " + std::to_string(new_tokens) + " / " + std::to_string(p_itr->unpaid_blocks) );
+         }
+
+         _gstate.perblock_bucket         += new_tokens;
+
+         int64_t producer_per_block_pay = 0;
+         if ( _gstate.total_unpaid_blocks > 0 ) {
+            producer_per_block_pay = (_gstate.perblock_bucket * p_itr->unpaid_blocks) / _gstate.total_unpaid_blocks;
+         }
+
+         _gstate.perblock_bucket     -= producer_per_block_pay;
+         _gstate.total_unpaid_blocks -= p_itr->unpaid_blocks;
+
+         auto payment_itr = _payments.find( p_itr->owner.value );
+
+         if (payment_itr != _payments.end() ) {
+            _payments.modify( payment_itr, same_payer, [&]( auto &row ) {
+               row.amount += new_tokens;
+            });
+         } else {
+            _payments.emplace( get_self(), [&]( auto &row ) {
+               row.producer = p_itr->owner;
+               row.amount = new_tokens;
+            });
+         }
+
+         _producers.modify( p_itr, same_payer, [&](auto& row) {
+            row.last_claim_time = ct;
+            row.unpaid_blocks   = 0;
+         });
+      }
+
+      _gstate.last_pervote_bucket_fill = ct;
+      _gstate.last_updated_reward      = ct;
+   }
+
    void system_contract::claimrewards( const name& owner ) {
       require_auth( owner );
 
-      const auto& prod = _producers.get( owner.value );
-      check( prod.active(), "producer does not have an active key" );
+      auto pay_itr = _payments.find( owner.value );
 
-      // TODO: out fail error message of the check (%)
-      check( _gstate.thresh_activated_stake_time != time_point(),
-                    "cannot claim rewards until the chain is activated (at least 15% of all tokens participate in voting)" );
+      check( pay_itr->amount, "no funds to claim" );
 
-      const auto ct = current_time_point();
+      token::transfer_action transfer_act{ token_account, { {bpay_account, active_permission}, {owner, active_permission} } };
+      transfer_act.send( bpay_account, owner, asset(pay_itr->amount, core_symbol()), "producer block pay" );
 
-      check( ct - prod.last_claim_time > microseconds(useconds_per_day), "already claimed rewards within past day" );
-
-      const asset token_supply   = token::get_supply(token_account, core_symbol().code() );
-      const auto usecs_since_last_fill = (ct - _gstate.last_pervote_bucket_fill).count();
-
-      if( usecs_since_last_fill > 0 && _gstate.last_pervote_bucket_fill > time_point() ) {
-         double additional_inflation = (_gstate4.continuous_rate * double(token_supply.amount) * double(usecs_since_last_fill)) / double(useconds_per_year);
-         check( additional_inflation <= double(std::numeric_limits<int64_t>::max() - ((1ll << 10) - 1)),
-                "overflow in calculating new tokens to be issued; inflation rate is too high" );
-         int64_t new_tokens = (additional_inflation < 0.0) ? 0 : static_cast<int64_t>(additional_inflation);
-
-         int64_t to_producers     = (new_tokens * uint128_t(pay_factor_precision)) / _gstate4.inflation_pay_factor;
-         int64_t to_savings       = new_tokens - to_producers;
-         int64_t to_per_block_pay = to_producers * uint128_t(pay_factor_precision);
-
-         if( new_tokens > 0 ) {
-            {
-               token::issue_action issue_act{ token_account, { {get_self(), active_permission} } };
-               issue_act.send( get_self(), asset(new_tokens, core_symbol()), "issue tokens for producer pay and savings" );
-            }
-            {
-               token::transfer_action transfer_act{ token_account, { {get_self(), active_permission} } };
-               if( to_savings > 0 ) {
-                  transfer_act.send( get_self(), saving_account, asset(to_savings, core_symbol()), "unallocated inflation" );
-               }
-               if( to_per_block_pay > 0 ) {
-                  transfer_act.send( get_self(), bpay_account, asset(to_per_block_pay, core_symbol()), "fund per-block bucket" );
-               }
-            }
-         }
-
-         _gstate.perblock_bucket         += to_per_block_pay;
-         _gstate.last_pervote_bucket_fill = ct;
-      }
-
-      int64_t producer_per_block_pay = 0;
-      if( _gstate.total_unpaid_blocks > 0 ) {
-         producer_per_block_pay = (_gstate.perblock_bucket * prod.unpaid_blocks) / _gstate.total_unpaid_blocks;
-      }
-
-      _gstate.perblock_bucket     -= producer_per_block_pay;
-      _gstate.total_unpaid_blocks -= prod.unpaid_blocks;
-
-      _producers.modify( prod, same_payer, [&](auto& p) {
-         p.last_claim_time = ct;
-         p.unpaid_blocks   = 0;
+      _payments.modify( pay_itr, same_payer, [&](auto& row) {
+         row.amount   = 0;
       });
-
-      if ( producer_per_block_pay > 0 ) {
-         token::transfer_action transfer_act{ token_account, { {bpay_account, active_permission}, {owner, active_permission} } };
-         transfer_act.send( bpay_account, owner, asset(producer_per_block_pay, core_symbol()), "producer block pay" );
-      }
    }
 
 } //namespace libresystem

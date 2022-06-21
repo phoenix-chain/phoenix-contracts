@@ -173,9 +173,9 @@ namespace libresystem {
 
       if( _gstate.thresh_activated_stake_time == time_point() ) {
          _gstate.total_activated_stake += total_voter_staked;
-         if( _gstate.total_activated_stake >= min_activated_stake ) {
-            _gstate.thresh_activated_stake_time = current_time_point();
-         }
+         // if( _gstate.total_activated_stake >= min_activated_stake ) {
+         //    _gstate.thresh_activated_stake_time = current_time_point();
+         // }
       }
 
       std::map<name, double> producer_delta;
