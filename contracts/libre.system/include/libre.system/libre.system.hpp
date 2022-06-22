@@ -130,11 +130,10 @@ namespace libresystem {
 
       block_timestamp      last_producer_schedule_update;
       time_point           last_updated_reward;
-      time_point           last_pervote_bucket_fill;
-      int64_t              perblock_bucket = 0;
       uint32_t             total_unpaid_blocks = 0; /// all blocks which have been produced but not paid
       int64_t              total_activated_stake = 0;
       time_point           thresh_activated_stake_time;
+      time_point           activated_time;
       uint16_t             last_producer_schedule_size = 0;
       double               total_producer_vote_weight = 0; /// the sum of all producer votes
       block_timestamp      last_name_close;
@@ -142,9 +141,9 @@ namespace libresystem {
       // explicit serialization macro is not necessary, used here only to improve compilation time
       EOSLIB_SERIALIZE_DERIVED( eosio_global_state, eosio::blockchain_parameters,
                                 (max_ram_size)(total_ram_bytes_reserved)(total_ram_stake)
-                                (last_producer_schedule_update)(last_updated_reward)(last_pervote_bucket_fill)
-                                (perblock_bucket)(total_unpaid_blocks)(total_activated_stake)(thresh_activated_stake_time)
-                                (last_producer_schedule_size)(total_producer_vote_weight)(last_name_close) )
+                                (last_producer_schedule_update)(last_updated_reward)
+                                (total_unpaid_blocks)(total_activated_stake)(thresh_activated_stake_time)
+                                (activated_time)(last_producer_schedule_size)(total_producer_vote_weight)(last_name_close) )
    };
 
    // Defines new global state parameters added after version 1.0
@@ -307,7 +306,7 @@ namespace libresystem {
          static constexpr eosio::name libre_account{"eosio.libre"_n};       // LIBRE
           
          static constexpr eosio::name token_account{"eosio.token"_n};
-         static constexpr eosio::name bpay_account{"eosio.bpay"_n};
+         static constexpr eosio::name bpay_account{"bpay.libre"_n};
          static constexpr eosio::name saving_account{"eosio.saving"_n};
 
          system_contract( name s, name code, datastream<const char*> ds );
@@ -436,10 +435,6 @@ namespace libresystem {
          [[eosio::action]]
          void claimrewards( const name& owner );
 
-         // defined in producer_pay.cpp
-         [[eosio::action]]
-         void updatereward();
-
          /**
           * Change the annual inflation rate of the core token supply and specify how
           * the new issued tokens will be distributed based on the following structure.
@@ -496,7 +491,6 @@ namespace libresystem {
          using vonstake_action = eosio::action_wrapper<"vonstake"_n, &system_contract::vonstake>;
          using setparams_action = eosio::action_wrapper<"setparams"_n, &system_contract::setparams>;
          using claimrewards_action = eosio::action_wrapper<"claimrewards"_n, &system_contract::claimrewards>;
-         using updaterewards_action = eosio::action_wrapper<"updatereward"_n, &system_contract::updatereward>;
          using setinflation_action = eosio::action_wrapper<"setinflation"_n, &system_contract::setinflation>;
 
          using kickbp_action = eosio::action_wrapper<"kickbp"_n, &system_contract::kickbp>;                       // LIBRE
@@ -516,7 +510,8 @@ namespace libresystem {
          void update_elected_producers( const block_timestamp& timestamp );
 
          // defined in producer_pay.cpp
-         uint8_t calculate_pay_amount();
+         void updrewards();
+         uint8_t calculate_pay_per_block();
    };
 
 }
