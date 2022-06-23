@@ -10,6 +10,7 @@ namespace libresystem {
 
    system_contract::system_contract( name s, name code, datastream<const char*> ds )
    :native(s,code,ds),
+    _payments(get_self(), get_self().value),
     _voters(get_self(), get_self().value),
     _producers(get_self(), get_self().value),
     _global(get_self(), get_self().value),
@@ -23,6 +24,12 @@ namespace libresystem {
       eosio_global_state dp;
       get_blockchain_parameters(dp);
       return dp;
+   }
+
+   symbol system_contract::core_symbol()const {
+      // const static auto sym = get_core_symbol( _rammarket );
+      const static auto sym = symbol(symbol_code("LIBRE"), 0);
+      return sym;
    }
 
    system_contract::~system_contract() {
@@ -57,8 +64,8 @@ namespace libresystem {
       auto prod = _producers.find( producer.value );
       check( prod != _producers.end(), "producer not found" );
       _producers.modify( prod, same_payer, [&](auto& p) {
-            p.deactivate();
-         });
+         p.deactivate();
+      });
    }
 
    /**
