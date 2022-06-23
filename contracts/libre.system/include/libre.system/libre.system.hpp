@@ -159,15 +159,6 @@ namespace libresystem {
                         (total_producer_votepay_share)(revision) )
    };
 
-   // Defines new global state parameters to store inflation rate and distribution
-   struct [[eosio::table("global4"), eosio::contract("eosio.system")]] eosio_global_state4 {
-      eosio_global_state4() { }
-      double   continuous_rate;
-      int64_t  inflation_pay_factor;
-
-      EOSLIB_SERIALIZE( eosio_global_state4, (continuous_rate)(inflation_pay_factor) )
-   };
-
    inline eosio::block_signing_authority convert_to_block_signing_authority( const eosio::public_key& producer_key ) {
       return eosio::block_signing_authority_v0{ .threshold = 1, .keys = {{producer_key, 1}} };
    }
@@ -282,8 +273,6 @@ namespace libresystem {
 
    typedef eosio::singleton< "global2"_n, eosio_global_state2 > global_state2_singleton;
 
-   typedef eosio::singleton< "global4"_n, eosio_global_state4 > global_state4_singleton;
-
    /**
     * The EOSIO system contract. The EOSIO system contract governs ram market, voters, producers, global state.
     */
@@ -295,10 +284,8 @@ namespace libresystem {
          producers_table          _producers;
          global_state_singleton   _global;
          global_state2_singleton  _global2;
-         global_state4_singleton  _global4;
          eosio_global_state       _gstate;
          eosio_global_state2      _gstate2;
-         eosio_global_state4      _gstate4;
 
       public:
          static constexpr eosio::name active_permission{"active"_n};
@@ -306,7 +293,6 @@ namespace libresystem {
           
          static constexpr eosio::name token_account{"eosio.token"_n};
          static constexpr eosio::name bpay_account{"bpay.libre"_n};
-         static constexpr eosio::name saving_account{"eosio.saving"_n};
 
          system_contract( name s, name code, datastream<const char*> ds );
          ~system_contract();
@@ -484,7 +470,6 @@ namespace libresystem {
 
          //defined in eosio.system.cpp
          static eosio_global_state get_default_parameters();
-         static eosio_global_state4 get_default_inflation_parameters();
          symbol core_symbol()const;
 
          // defined in voting.cpp
