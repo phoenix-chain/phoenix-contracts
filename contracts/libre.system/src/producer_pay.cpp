@@ -8,8 +8,9 @@ namespace libresystem {
    using eosio::token;
 
    uint8_t system_contract::calculate_pay_per_block() {
-      const int64_t minutes = 6 * 60'000'000;
-      const int64_t six_months = microseconds(minutes).count() / 2;
+
+      // Next line should be removed, it is for small week test
+      const int64_t six_months = microseconds(useconds_per_day).count();
 
       // const int64_t six_months = microseconds(useconds_per_year).count() / 2;
       const int64_t elapse = (_gstate2.last_block_num.to_time_point() - _gstate.activated_time).count();
@@ -49,10 +50,10 @@ namespace libresystem {
          });
       }
 
-      if ( current_time_point() - _gstate.last_updated_reward > microseconds(useconds_per_day) ) {
+      // TODO: useconds_per_hour -> useconds_per_day
+      if ( current_time_point() - _gstate.last_updated_reward > microseconds(useconds_per_hour) ) {
          updrewards();
       }
-      
 
       /// only update block producers once every minute, block_timestamp is in half seconds
       if( timestamp.slot - _gstate.last_producer_schedule_update.slot > 90 ) {
